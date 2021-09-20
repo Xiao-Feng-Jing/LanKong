@@ -1,0 +1,23 @@
+# 应用名称
+spring:
+  application:
+    name: langkong
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 100MB
+  #数据库相关配置
+  datasource:
+    url: jdbc:mysql://:3306/数据库
+    username:
+    password:
+
+  #redis配置
+  redis:
+    host:
+    port: 6379
+    password:
+    database: 2
+# 应用服务 WEB 访问端口
+server:
+  port: 8080

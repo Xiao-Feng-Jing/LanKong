@@ -1,0 +1,23 @@
+#阿里云oss配置
+aliyun:
+  oss:
+    urlPrefix:  #浏览器访问地址
+    endpoint:     #Bucket所在地域对应的Endpoint
+    accessKeyId:  #访问权限id
+    accessKeySecret:  #访问权限秘钥
+    bucketName:  #Bucket名
+    policy:
+      expire: 300 # 签名有效期(S)
+      maxSize: 10 # 上传文件大小(M)
+      callback:  # 文件上传成功后的回调地址
+      dir:
+        one: images/ # 图片上传文件夹路径前缀
+        two: detail/ # 普通文件上传地址
+#支付宝沙箱二维码支付配置
+alipay:
+  appId:
+  privateKey:
+  publicKey:
+  gateway: openapi.alipaydev.com  # 不用修改
+  returnUrl:  # 支付成功后跳转的页面，可以为空，也可以根据回调接口的判断来返回信息
+  notifyUrl:  # 当支付成功后，支付宝的回调接口，是你本地的接口，如果没有域名的话要内网穿透

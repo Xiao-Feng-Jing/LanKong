@@ -3,6 +3,7 @@ package com.zengkan.lankong.vo;
 import com.zengkan.lankong.pojo.GoodsSku;
 import com.zengkan.lankong.pojo.GoodsSpu;
 import com.zengkan.lankong.pojo.SpuDetail;
+import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,6 +19,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
+@ApiModel(value = "商品数据模型")
 public class SpuVo extends GoodsSpu {
 
     private static final long serialVersionUID = 8863789918388526100L;

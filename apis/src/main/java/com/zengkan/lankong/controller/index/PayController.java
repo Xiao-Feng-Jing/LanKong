@@ -4,17 +4,13 @@ import com.alipay.easysdk.factory.Factory;
 import com.alipay.easysdk.payment.page.models.AlipayTradePagePayResponse;
 import com.zengkan.lankong.service.OrderService;
 import com.zengkan.lankong.utils.UUIDUtil;
+import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Enumeration;
@@ -30,7 +26,8 @@ import java.util.Map;
  * @Description : 支付宝支付接口
  * @modified By :
  **/
-@RestController("portal/pay")
+@RestController
+@RequestMapping("portal/pay")
 @Api(tags = "支付接口")
 public class PayController {
 
@@ -52,7 +49,7 @@ public class PayController {
      */
     @GetMapping("url/{id}")
     public ResponseBean generateUrl(@PathVariable("id") String orderId) {
-        return new ResponseBean(200,SUCCESS_MESSAGE,orderService.generateUrl(orderId));
+        return new ResponseBean(CodeEnum.SUCCESS, orderService.generateUrl(orderId));
     }
 
     @Value("${alipay.returnUrl}")
@@ -66,7 +63,7 @@ public class PayController {
      * 当用户点击支付的时候，应该是要传参的，我这里就直接省略了，免得修改麻烦，大家应该可以自己实现
      */
     @SneakyThrows
-    @PostMapping
+    @PostMapping(value = "pay")
     public String pay() {
         AlipayTradePagePayResponse response = Factory.Payment
                 //选择网页支付平台

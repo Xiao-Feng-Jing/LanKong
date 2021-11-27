@@ -16,13 +16,13 @@ import java.util.concurrent.ExecutionException;
  * @Description:
  **/
 public interface FileUploadService {
-    List<FileUploadResult> upload(MultipartFile[] files, boolean isImage) throws ExecutionException, InterruptedException;
+    List<FileUploadResult> upload(MultipartFile[] files, boolean isImage);
 
     void delete(String fileName);
 
-    void download(String fileName, HttpServletResponse response) throws IOException;
+    void download(String fileName, HttpServletResponse response);
 
-    FileUploadResult append(MultipartFile file,String fileName) throws IOException;
+    FileUploadResult append(MultipartFile file,String fileName);
 
-    String range(String fileName, Long minSize, Long maxSize) throws IOException;
+    String range(String fileName, Long minSize, Long maxSize);
 }

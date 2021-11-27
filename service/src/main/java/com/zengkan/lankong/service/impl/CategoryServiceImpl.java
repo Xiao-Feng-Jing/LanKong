@@ -33,6 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(long cid) {
         /*
          * 先根据id查询要删除的对象，

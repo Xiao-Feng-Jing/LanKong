@@ -1,5 +1,8 @@
 package com.zengkan.lankong.exception;
 
+import com.zengkan.lankong.enums.ExceptionEnum;
+import lombok.Data;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -9,9 +12,8 @@ package com.zengkan.lankong.exception;
  * @Description : 自定义异常
  * @modified By :
  **/
-public class MyException extends Exception{
-    
-    public MyException(String message) {
-        super(message);
-    }
+@Data
+public class MyException extends RuntimeException{
+    private static final long serialVersionUID = 4437827886870252240L;
+    private final ExceptionEnum exceptionEnum;
 }

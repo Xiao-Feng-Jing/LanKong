@@ -61,8 +61,16 @@ public class JwtUtil {
     public static Claims checkToken(String token){
         //获取解析器，传入解码秘钥
         //System.out.println(clamit);
-        return Jwts.parser().setSigningKey(getSecret())
-                .parseClaimsJws(token).getBody();
+        Claims claims = null;
+
+        try {
+            claims = Jwts.parser().setSigningKey(getSecret())
+                    .parseClaimsJws(token).getBody();
+            return claims;
+        } catch (Exception e) {
+            log.error("token 不存在");
+            return claims;
+        }
     }
 
     private static SecretKey getSecret() {

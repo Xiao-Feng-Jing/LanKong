@@ -1,5 +1,7 @@
 package com.zengkan.lankong.service.impl;
 
+import com.zengkan.lankong.enums.ExceptionEnum;
+import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.mappers.UserMapper;
 import com.zengkan.lankong.mappers.UserRoleMapper;
 import com.zengkan.lankong.pojo.User;
@@ -10,9 +12,11 @@ import com.zengkan.lankong.utils.MapUtils;
 import com.zengkan.lankong.utils.RedisUtil;
 import com.zengkan.lankong.utils.ShaUtil;
 import com.zengkan.lankong.vo.ResponseBean;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 
@@ -24,30 +28,27 @@ import java.util.Map;
  * @Description:
  **/
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
-    private static final String string = "userToken";
+    private static final String STRING = "userToken";
     
     private final RedisUtil redisUtil;
-
-    private final ShaUtil shaUtil;
 
     private final UserMapper userMapper;
 
     private final UserRoleMapper roleMapper;
 
     @Autowired
-    public UserServiceImpl(RedisUtil redisUtil, ShaUtil shaUtil, UserMapper userMapper, UserRoleMapper roleMapper) {
+    public UserServiceImpl(RedisUtil redisUtil, UserMapper userMapper, UserRoleMapper roleMapper) {
         this.redisUtil = redisUtil;
-        this.shaUtil = shaUtil;
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
     }
 
     @Override
-    public ResponseBean login(User user){
-        ResponseBean result = new ResponseBean();
-        user.setPassword(shaUtil.getSha(user.getPassword()));
+    public String login(User user){
+        user.setPassword(ShaUtil.getSha(user.getPassword()));
         User users=userMapper.login(user);
         if (users != null) {
             try {
@@ -55,24 +56,24 @@ public class UserServiceImpl implements UserService {
                 //生成token
                 String token = JwtUtil.createToken(map);
                 saveToken(token, user);
-                result.setData(user);
-                result.setMsg(token);
-                return result;
-            } catch (IllegalAccessException e) {
-                return null;
+                // 成功
+                return token;
+            } catch (Exception e) {
+                log.error("user 转 Map 失败");
+                // 失败
+                throw new MyException(ExceptionEnum.ERROR);
             }
         }
-        return null;
+        throw new MyException(ExceptionEnum.INVALID_USERNAME_PASSWORD);
     }
 
     @Override
     public void loginOut(String token) {
         User user = (User) redisUtil.getString(token);
-        String isToken = (String) redisUtil.hGet(string,user.getId());
+        String isToken = (String) redisUtil.hGet(STRING,user.getId());
         if (token != null) {
             redisUtil.del(isToken);
         }
-        redisUtil.hDelete(string,user.getId());
     }
 
     @Override
@@ -97,10 +98,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public void saveToken(String token, User user){
         this.redisUtil.setString(token,user,1800);
-        String oldToken = (String) redisUtil.hGet(string,user.getId());
-        if (oldToken != null){
-            redisUtil.del(oldToken);
-        }
-        redisUtil.setHash(string,user.getId(),token);
     }
 }

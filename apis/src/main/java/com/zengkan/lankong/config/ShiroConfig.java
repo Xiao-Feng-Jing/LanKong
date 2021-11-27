@@ -55,7 +55,7 @@ public class ShiroConfig {
         // 添加自己的过滤器并且取名为jwt
         Map<String, Filter> filterMap=new LinkedHashMap<>();
         //设置我们自定义的JWT过滤器
-        filterMap.put("jwt",new JwtFilter(userService,redisUtil));
+        filterMap.put("jwt",new JwtFilter());
         factoryBean.setFilters(filterMap);
 
         // 设置无权限时跳转的 url;
@@ -69,7 +69,7 @@ public class ShiroConfig {
         // 访问 /noAuth/** 不通过JWTFilter
         filterRuleMap.put("/noAuth/**","anon");
         // 所有请求通过我们自己的JWT Filter
-        filterRuleMap.put("/**","jwt");
+        filterRuleMap.put("/**","anon");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);
         return factoryBean;
     }

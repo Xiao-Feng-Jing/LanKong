@@ -2,6 +2,7 @@ package com.zengkan.lankong.controller.admin;
 
 import com.zengkan.lankong.pojo.GoodsCategory;
 import com.zengkan.lankong.service.CategoryService;
+import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -9,7 +10,6 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 
 
 /**
@@ -24,8 +24,6 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "商品分类管理")
 public class CategoryController {
 
-    private static final String SUCCESS_MESSAGE = "SUCCESS";
-
     private final CategoryService categoryService;
 
     @Autowired
@@ -39,10 +37,10 @@ public class CategoryController {
      * @return
      */
     @GetMapping("/list")
-    @ApiOperation(value = "商品分类查询",notes = "根据分级显示")
+    @ApiOperation(value = "商品分类查询",notes = "根据层级显示")
     @ApiImplicitParam(name = "pid",value = "父分类id",required = true,paramType = "query",dataType = "Integer",defaultValue = "0")
     public ResponseBean listCategory(@RequestParam(value = "pid", defaultValue = "0")Long pid){
-        return new ResponseBean(200,SUCCESS_MESSAGE,categoryService.category(pid));
+        return new ResponseBean(CodeEnum.SUCCESS, categoryService.category(pid));
     }
 
     /**
@@ -54,7 +52,7 @@ public class CategoryController {
     @DeleteMapping("/cid/{cid}")
     public ResponseBean deleteCategory(@PathVariable("cid") long cid) {
         categoryService.deleteById(cid);
-        return new ResponseBean(200,SUCCESS_MESSAGE,null);
+        return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
     }
 
     /**
@@ -65,7 +63,7 @@ public class CategoryController {
     @RequiresRoles("admin")
     public ResponseBean saveCategory(@RequestBody GoodsCategory goodsCategory){
         GoodsCategory category = categoryService.saveCategory(goodsCategory);
-        return new ResponseBean(201,SUCCESS_MESSAGE,category);
+        return new ResponseBean(CodeEnum.SAVE_SUCCESS, category);
     }
 
     /**
@@ -76,6 +74,6 @@ public class CategoryController {
     @RequiresRoles("admin")
     public ResponseBean updateCategory(@RequestBody GoodsCategory goodsCategory){
         categoryService.updateCategory(goodsCategory);
-        return new ResponseBean(204,SUCCESS_MESSAGE,null);
+        return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
     }
 }

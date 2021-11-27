@@ -8,6 +8,7 @@ import com.aliyun.oss.model.PolicyConditions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zengkan.lankong.config.OssConfig;
+import com.zengkan.lankong.enums.ExceptionEnum;
 import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.service.OssService;
 import com.zengkan.lankong.vo.OssCallbackParam;
@@ -80,7 +81,7 @@ public class OssServiceImpl implements OssService {
             ossPolicyResult.setCallback(callbackData);
             ossPolicyResult.setHost(action);
         } catch (JsonProcessingException e) {
-            throw new MyException("文件签名生成失败");
+            throw new MyException(ExceptionEnum.SIGNATURE_FILE_ERROR);
         }
         return ossPolicyResult;
     }

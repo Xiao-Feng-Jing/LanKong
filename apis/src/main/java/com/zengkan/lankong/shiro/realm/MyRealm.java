@@ -1,5 +1,7 @@
 package com.zengkan.lankong.shiro.realm;
 
+import com.zengkan.lankong.enums.ExceptionEnum;
+import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.pojo.User;
 import com.zengkan.lankong.pojo.UserRole;
 import com.zengkan.lankong.service.UserService;
@@ -7,8 +9,8 @@ import com.zengkan.lankong.shiro.token.JwtToken;
 import com.zengkan.lankong.utils.JwtUtil;
 import com.zengkan.lankong.utils.MapUtils;
 import com.zengkan.lankong.utils.RedisUtil;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
@@ -18,6 +20,8 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 
 /**
@@ -66,17 +70,29 @@ public class MyRealm extends AuthorizingRealm {
     /**
      * 默认使用此方法进行用户名正确与否验证，错误抛出异常即可，在需要用户认证和鉴权的时候才会调用
      */
+    @SneakyThrows
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) {
         String jwt= ((JwtToken) token).getToken();
         User user = (User) redisUtil.getString(jwt);
         if (user != null) {
-            if (!token.equals(redisUtil.hGet("userToken",user.getId()))) {
-                throw new AuthenticationException("token 是非法的");
+            Map<String,Object> map = JwtUtil.checkToken(jwt);
+            if (map == null || !map.get("username").equals(user.getUsername())) {
+                throw new MyException(ExceptionEnum.TOKEN_IS_ILLEGAL);
+            }
+            boolean shouldRefresh = shouldTokenRefresh(jwt);
+            if(shouldRefresh) {
+                jwt = JwtUtil.createToken(MapUtils.getObjectToMap(user));
+                userService.saveToken(jwt,user);
             }
             return new SimpleAuthenticationInfo(jwt,jwt,"MyRealm");
         }else {
-            throw new AuthenticationException("token 过期");
+            throw new MyException(ExceptionEnum.TOKEN_IS_EXPIRED);
         }
+    }
+
+    protected boolean shouldTokenRefresh(String token){
+        long time = redisUtil.getExpire(token);
+        return time > 0 && time <= 300;
     }
 }

@@ -2,12 +2,11 @@ package com.zengkan.lankong.controller.admin;
 
 import com.zengkan.lankong.pojo.TbSpecification;
 import com.zengkan.lankong.service.SpecService;
+import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -20,9 +19,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("manage/spec")
 @Api(tags = "规格参数")
 public class SpecController {
-
-    private static final String SUCCESS_MESSAGE = "SUCCESS";
-    private static final String FAIL_MESSAGE = "FAIL";
 
     private final SpecService specService;
 
@@ -38,11 +34,7 @@ public class SpecController {
      * */
     @GetMapping("{id}")
     public ResponseBean query(@PathVariable("id") long id) {
-        TbSpecification specification = specService.queryById(id);
-        if (specification == null) {
-            return new ResponseBean(404,"参数模板不存在",null);
-        }
-        return new ResponseBean(200,SUCCESS_MESSAGE,specification);
+        return new ResponseBean(CodeEnum.SUCCESS, specService.queryById(id));
     }
 
     /**
@@ -54,7 +46,7 @@ public class SpecController {
     @RequiresRoles("admin")
     public ResponseBean saveSpec(@RequestBody TbSpecification tbSpecification){
         specService.save(tbSpecification);
-        return new ResponseBean(201,SUCCESS_MESSAGE,null);
+        return new ResponseBean(CodeEnum.SAVE_SUCCESS, null);
     }
 
     /**
@@ -66,7 +58,7 @@ public class SpecController {
     @RequiresRoles("admin")
     public ResponseBean updateSpec(@RequestBody TbSpecification tbSpecification){
         specService.update(tbSpecification);
-        return new ResponseBean(201,SUCCESS_MESSAGE, null);
+        return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
     }
 
     /**
@@ -78,6 +70,6 @@ public class SpecController {
     @RequiresRoles("admin")
     public ResponseBean deleteSpec(@PathVariable("cid") long cid){
         specService.delete(cid);
-        return new ResponseBean(204,SUCCESS_MESSAGE, null);
+        return new ResponseBean(CodeEnum.DELETE_SUCCESS, null);
     }
 }

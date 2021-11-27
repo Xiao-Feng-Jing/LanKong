@@ -1,5 +1,6 @@
 package com.zengkan.lankong.pojo;
 
+
 import lombok.Data;
 
 import java.util.Date;

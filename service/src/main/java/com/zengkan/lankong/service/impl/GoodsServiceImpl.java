@@ -1,8 +1,12 @@
 package com.zengkan.lankong.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.zengkan.lankong.enums.ExceptionEnum;
+import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.mappers.GoodsSkuMapper;
 import com.zengkan.lankong.mappers.GoodsSpuMapper;
 import com.zengkan.lankong.mappers.SpuDetailMapper;
@@ -246,6 +250,9 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     public GoodsSku querySkuBySkuId(String skuId) {
         GoodsSku goodsSku = goodsSkuMapper.querySkuBySkuId(skuId);
+        if (goodsSku == null) {
+            throw new MyException(ExceptionEnum.SKU_NOT_FOUND);
+        }
         WarehouseGoods warehouseGoods = warehouseGoodsMapper.queryBySkuId(skuId);
         goodsSku.setStock(warehouseGoods.getCurrentCnt());
         return goodsSku;
@@ -262,6 +269,9 @@ public class GoodsServiceImpl implements GoodsService {
          * 2.商品的包装清单、售后服务
          */
         GoodsSpu goodsSpu = goodsSpuMapper.selectBySpuId(spuId);
+        if (goodsSpu == null) {
+            throw new MyException(ExceptionEnum.SPU_NOT_FOUND);
+        }
         //
         SpuDetail spuDetail = querySpuDetailBySpuId(spuId);
 
@@ -270,7 +280,6 @@ public class GoodsServiceImpl implements GoodsService {
         BeanUtils.copyProperties(goodsSpu,spuVo);
         spuVo.setSkus(skus);
         spuVo.setSpuDetail(spuDetail);
-
         return spuVo;
     }
 
@@ -284,10 +293,11 @@ public class GoodsServiceImpl implements GoodsService {
         List<GoodsSku> skuList = goodsSkuMapper.selectSkuBySpuId(spuId);
 
         if (skuList.isEmpty()) {
-            return skuList;
+            throw new MyException(ExceptionEnum.SKU_NOT_FOUND);
         }
         List<String> ids = skuList.stream().map(GoodsSku::getSkuId).collect(Collectors.toList());
         List<WarehouseGoods> stockList = warehouseGoodsMapper.queryBySpuIds(ids);
+        // 查询库存
         for (GoodsSku sku : skuList) {
             for (WarehouseGoods warehouseGoods : stockList) {
                 if (warehouseGoods.getSkuId().equals(sku.getSkuId())){
@@ -306,6 +316,10 @@ public class GoodsServiceImpl implements GoodsService {
      * */
     @Override
     public SpuDetail querySpuDetailBySpuId(String spuId) {
+        SpuDetail spu = spuDetailMapper.queryById(spuId);
+        if (spu == null) {
+            throw new MyException(ExceptionEnum.SPU_DETAIL_NOT_FOUND);
+        }
         return spuDetailMapper.queryById(spuId);
     }
 
@@ -348,32 +362,24 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     private void detailsStringToMultipartFile(SpuDetail spuDetail,SpuDetail oldSpuDetail,boolean isUpdate){
-        ObjectMapper objectMapper = new ObjectMapper();
         FileUploadResult results = null;
         MultipartFileUtil multipartUtil = new MultipartFileUtil();
         multipartUtil.setFile(spuDetail.getDescription());
         multipartUtil.setBytes(spuDetail.getDescription().getBytes());
         multipartUtil.setFileName(String.valueOf(System.currentTimeMillis()));
-        try {
-            Map<String, Object> map = new ConcurrentHashMap<>();
-            if (!isUpdate){
-                map.put("minSize",0);
-                results = fileUploadService.append(multipartUtil,null);
-            }else {
-                map = objectMapper.readValue(oldSpuDetail.getDescription(),Map.class);
+        Map<String, Object> map = new ConcurrentHashMap<>();
+        if (!isUpdate){
+            map.put("minSize",0);
+            results = fileUploadService.append(multipartUtil,null);
+        }else {
+            map = JSON.parseObject(oldSpuDetail.getDescription(),new TypeReference<Map<String,Object>>(){});
 
-                results = fileUploadService.append(multipartUtil,(String) map.get("fileName"));
-                map.put("minSize",Integer.parseInt(map.get("maxSize").toString())+1);
-            }
-            assert results != null;
-            map.put("fileName",results.getName());
-
-            map.put("maxSize",results.getFileSize()-1);
-
-            spuDetail.setDescription(objectMapper.writeValueAsString(map));
-        } catch (IOException e) {
-            logger.error("存储specDetail有误");
-            e.printStackTrace();
+            results = fileUploadService.append(multipartUtil,(String) map.get("fileName"));
+            map.put("minSize",Integer.parseInt(map.get("maxSize").toString())+1);
         }
+        assert results != null;
+        map.put("fileName",results.getName());
+        map.put("maxSize",results.getFileSize()-1);
+        spuDetail.setDescription(JSON.toJSONString(map));
     }
 }

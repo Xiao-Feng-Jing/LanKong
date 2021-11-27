@@ -1,5 +1,7 @@
 package com.zengkan.lankong.service.impl;
 
+import com.zengkan.lankong.enums.ExceptionEnum;
+import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.mappers.SpecMapper;
 import com.zengkan.lankong.pojo.TbSpecification;
 import com.zengkan.lankong.service.SpecService;
@@ -40,7 +42,11 @@ public class SpecServiceImpl implements SpecService {
      * */
     @Override
     public TbSpecification queryById(long id) {
-        return specMapper.queryById(id);
+        TbSpecification tbSpecification =  specMapper.queryById(id);
+        if (tbSpecification == null) {
+            throw new MyException(ExceptionEnum.SPECIFICATION_NOT_FOUND);
+        }
+        return tbSpecification;
     }
 
     @Transactional(rollbackFor = Exception.class)

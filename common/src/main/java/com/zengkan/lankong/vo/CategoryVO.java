@@ -2,7 +2,6 @@ package com.zengkan.lankong.vo;
 
 import com.zengkan.lankong.pojo.GoodsCategory;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.util.List;
@@ -16,17 +15,22 @@ import java.util.List;
  * @Description : 推荐商品分类对外接口
  * @modified By :
  **/
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class CategoryVO extends GoodsCategory {
+public class CategoryVO implements Serializable {
     private static final long serialVersionUID = 7309818923058079242L;
+
     /**
-     * 实现首页的类别显示
+     * 推荐分类
+     * */
+    private GoodsCategory firstCategory;
+
+    /**
+     * 推荐分类的子分类
      * */
     private List<GoodsCategory> categories;
+
     /**
      * 实现首页分类商品推荐
      * */
     private List<SpuVo> products;
-
 }

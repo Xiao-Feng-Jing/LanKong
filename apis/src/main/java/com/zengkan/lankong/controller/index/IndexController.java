@@ -2,6 +2,7 @@ package com.zengkan.lankong.controller.index;
 
 import com.zengkan.lankong.service.IndexService;
 import io.swagger.annotations.Api;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
  * @Description : 首页门户
  * @modified By :
  **/
-@RestController("portal/index")
+@RestController
+@RequestMapping("portal/index")
 @Api(value = "提供首页数据显示所需的接口",tags = "商城首页数据")
 public class IndexController {
 

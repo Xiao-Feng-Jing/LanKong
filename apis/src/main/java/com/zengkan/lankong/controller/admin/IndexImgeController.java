@@ -2,16 +2,13 @@ package com.zengkan.lankong.controller.admin;
 
 import com.zengkan.lankong.pojo.IndexImg;
 import com.zengkan.lankong.service.IndexImgService;
+import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,44 +22,39 @@ import java.util.List;
 @Api(tags = "首页轮播图管理")
 public class IndexImgeController {
 
-    private static final String SUCCESS_MESSAGE = "SUCCESS";
-    private static final String FAIL_MESSAGE = "FAIL";
-
-    private final IndexImgService carouselMapService;
+    private final IndexImgService indexImgService;
 
     @Autowired
     public IndexImgeController(IndexImgService indexImgService) {
-        this.carouselMapService = indexImgService;
+        this.indexImgService = indexImgService;
     }
 
     @GetMapping("/imageAddr")
-    @ApiOperation("图片地址的获取")
+    @ApiOperation("获取轮播图")
     public ResponseBean imageAddr(){
-        return new ResponseBean(200,SUCCESS_MESSAGE,carouselMapService.queryUrlList());
+        return new ResponseBean(CodeEnum.SUCCESS, indexImgService.queryUrlList());
     }
 
     @DeleteMapping("/imageAddr")
     @ApiOperation("删除轮播图")
     @RequiresRoles("admin")
     public ResponseBean deleteImageAddr(@RequestParam("id") String id) {
-        if (carouselMapService.deleteById(id)){
-            return new ResponseBean(200,SUCCESS_MESSAGE,null);
-        }
-        return new ResponseBean(404,"轮播图不存在",null);
+        indexImgService.deleteById(id);
+        return new ResponseBean(CodeEnum.DELETE_SUCCESS, null);
     }
 
     @PostMapping("/imageAddr")
     @ApiOperation("新增轮播图")
     @RequiresRoles("admin")
     public ResponseBean saveImageAddr(@RequestBody IndexImg indexImg){
-        return new ResponseBean(201,SUCCESS_MESSAGE,carouselMapService.save(indexImg));
+        return new ResponseBean(CodeEnum.SAVE_SUCCESS, indexImgService.save(indexImg));
     }
 
     @PutMapping("/imageAddr")
     @ApiOperation("修改轮播图")
     @RequiresRoles("admin")
     public ResponseBean updateImageAddr(@RequestBody IndexImg indexImg){
-        return new ResponseBean(201,SUCCESS_MESSAGE,carouselMapService.update(indexImg));
+        return new ResponseBean(CodeEnum.UPDATE_SUCCESS, indexImgService.update(indexImg));
     }
 
 }

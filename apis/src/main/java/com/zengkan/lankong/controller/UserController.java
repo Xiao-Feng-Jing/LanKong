@@ -2,7 +2,7 @@ package com.zengkan.lankong.controller;
 
 import com.zengkan.lankong.pojo.User;
 import com.zengkan.lankong.service.UserService;
-import com.zengkan.lankong.utils.RedisUtil;
+import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -10,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,18 +33,9 @@ public class UserController {
         this.userService = userService;
     }
 
-
-    /**
-     * 无权限获取相应的数据
-     * */
-    @GetMapping("/noAuth/{message}")
-    @ApiOperation("非法请求接口")
-    public ResponseBean noAuth(@PathVariable("message") String message) {
-        return new ResponseBean(401,message,null);
-    }
-
     /**
      * 退出登录
+     * @param request http请求
      * @return 退出登录是否成功
      * */
     @DeleteMapping("/login")
@@ -65,14 +54,6 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation("用户登录接口")
     public ResponseBean login(@RequestBody User user){
-        ResponseBean result = userService.login(user);
-        if (result != null) {
-            result.setCode(200);
-            log.info("{},登录成功",user.getUsername());
-        }else {
-            result = new ResponseBean(412,"账号或密码错误",null);
-            log.info("{},登录失败",user.getUsername());
-        }
-        return result;
+        return new ResponseBean(CodeEnum.SUCCESS, userService.login(user));
     }
 }

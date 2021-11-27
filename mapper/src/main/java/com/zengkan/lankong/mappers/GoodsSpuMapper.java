@@ -28,7 +28,7 @@ public interface GoodsSpuMapper {
             "<where>" +
             "<if test='key != null'> MATCH(goods_name,title) AGAINST (#{key} IN NATURAL LANGUAGE MODE)</if> " +
             "<if test='saleable != null'> AND saleable=#{saleable}</if> " +
-            "<if test='isNew != null'> AND is_new=#{isNew}</if> >" +
+            "<if test='isNew != null'> AND is_new=#{isNew}</if> " +
             "</where>" +
             "</script>")
     List<GoodsSpu> pageList(SpuQueryByPage spuQueryByPage);

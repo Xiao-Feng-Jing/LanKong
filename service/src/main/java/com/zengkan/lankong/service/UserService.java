@@ -16,12 +16,12 @@ public interface UserService {
     /**
      * 用户登录
      * */
-     ResponseBean login(User user);
+    String login(User user);
 
-     /**
-      * 退出登录
-      * */
-     void loginOut(String token);
+    /**
+    * 退出登录
+    * */
+    void loginOut(String token);
     /**
      * 用户查询
      * */

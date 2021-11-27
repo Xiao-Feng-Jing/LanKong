@@ -1,6 +1,7 @@
 package com.zengkan.lankong.vo;
 
-import lombok.AllArgsConstructor;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,23 +14,22 @@ import lombok.NoArgsConstructor;
  **/
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@ApiModel("数据响应模型")
 public class ResponseBean {
 
-    private long code;
-    private String msg;
-    private long enCode;
+    @ApiModelProperty("响应状态码，响应消息")
+    private Object code;
+    @ApiModelProperty("响应数据")
     private Object data;
 
-    public ResponseBean(long code, String msg ,Object data){
+    public ResponseBean(Object code , Object data){
         this.code = code;
-        this.msg = msg;
         this.data = data;
     }
 
-    public ResponseBean(long code, String msg, long enCode){
-        this.code = code;
-        this.msg = msg;
-        this.enCode = enCode;
+    @Override
+    public String toString() {
+        return "ResponseBean(code=" + this.getCode()
+                + ", data=" + this.getData() + ")";
     }
 }

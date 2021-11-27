@@ -1,18 +1,24 @@
 package com.zengkan.lankong.service.impl;
 
+import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.*;
 import com.zengkan.lankong.config.OssConfig;
+import com.zengkan.lankong.enums.ExceptionEnum;
+import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.service.FileUploadService;
 import com.zengkan.lankong.service.OSSUploadService;
 import com.zengkan.lankong.utils.RedisUtil;
 import com.zengkan.lankong.vo.FileUploadResult;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +40,7 @@ import java.util.concurrent.ExecutionException;
  * @Description:
  **/
 @Service
+@Slf4j
 public class FileUploadServiceImpl implements FileUploadService {
 
     @Autowired
@@ -48,22 +55,37 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Autowired
     private OSSUploadService ossUploadService;
 
+    /**
+     * 上传文件到阿里云oss
+     * */
     @Override
-    public List<FileUploadResult> upload(MultipartFile[] files, boolean isImage) throws ExecutionException, InterruptedException {
+    @Transactional(rollbackFor = Exception.class)
+    public List<FileUploadResult> upload(MultipartFile[] files, boolean isImage) {
         //文件新路径
         List<FileUploadResult> list = new CopyOnWriteArrayList<>();
         for (MultipartFile file : files) {
-            list.add(ossUploadService.upload(getFilePath(file.getOriginalFilename(),isImage),file).get());
+            try {
+                list.add(ossUploadService.upload(getFilePath(file.getOriginalFilename(),isImage),file).get());
+            } catch (Exception e) {
+                log.error("{}: 上传失败",file.getOriginalFilename());
+            }
         }
 
         return list;
     }
 
+    /**
+     * 删除图片
+     * */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(String fileName) {
         ossUploadService.delete(modifyFileName(fileName));
     }
 
+    /**
+     * 下载文件
+     * */
     @Override
     public void download(String fileName, HttpServletResponse response){
         try {
@@ -83,13 +105,18 @@ public class FileUploadServiceImpl implements FileUploadService {
             out.close();
             in.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("{}: 下载失败",fileName);
+            throw new MyException(ExceptionEnum.DOWNLOAD_FILE_ERROR);
         }
     }
 
 
+    /**
+     * 追加上传文件
+     * */
     @Override
-    public FileUploadResult append(MultipartFile file, String fileName) throws IOException {
+    @Transactional(rollbackFor = Exception.class)
+    public FileUploadResult append(MultipartFile file, String fileName){
         FileUploadResult fileUploadResult = new FileUploadResult();
 
         try {
@@ -129,29 +156,40 @@ public class FileUploadServiceImpl implements FileUploadService {
             fileUploadResult.setResponse("SUCCESS");
             redisUtil.del(fileName);
         } catch (IOException e) {
-            throw new IOException(e);
+            log.error("{}: 追加上传失败",fileName);
+            throw new MyException(ExceptionEnum.UPLOAD_OSS_ERROR);
         }
         return fileUploadResult;
     }
 
+    /**
+     * 在一定范围内下载文件
+     * */
     @Override
-    public String range(String fileName, Long minSize, Long maxSize) throws IOException {
+    public String range(String fileName, Long minSize, Long maxSize){
         String str = null;
         str = (String) redisUtil.getString(fileName);
         //使用分布式锁，因为考虑会部署到多台服务器
         if (str == null) {
 
             String uuid = UUID.randomUUID().toString();
-            if (!redisUtil.lock("lock",uuid)){
+            if (Boolean.FALSE.equals(redisUtil.lock("lock",uuid))){
                 //如果加锁失败  返回默认值
                 return str;
             }
             fileName = modifyFileName(fileName);
 
-            GetObjectRequest getRequest = new GetObjectRequest(ossConfig.getALIYUN_OSS_BUCKET_NAME(),
-                    fileName);
-            getRequest.setRange(minSize, maxSize);
-            OSSObject ossObject = ossClient.getObject(getRequest);
+            OSSObject ossObject = null;
+            try {
+                GetObjectRequest getRequest = new GetObjectRequest(ossConfig.getALIYUN_OSS_BUCKET_NAME(),
+                        fileName);
+                getRequest.setRange(minSize, maxSize);
+                ossObject = ossClient.getObject(getRequest);
+            } catch (Exception e) {
+                throw new MyException(ExceptionEnum.FILE_NOT_FOUND);
+            }finally {
+                redisUtil.unlock("lock",uuid);
+            }
             //读取文件内容
             try (BufferedReader in = new BufferedReader(new InputStreamReader(ossObject.getObjectContent(), StandardCharsets.UTF_8));){
                 StringBuilder sb = new StringBuilder();
@@ -165,7 +203,8 @@ public class FileUploadServiceImpl implements FileUploadService {
                 redisUtil.setString(fileName, sb.toString());
                 return sb.toString();
             } catch (Exception e) {
-                throw new IOException(e);
+                log.error("{}: 文件读取失败", fileName);
+                throw new MyException(ExceptionEnum.DOWNLOAD_FILE_ERROR);
             }finally {
                 redisUtil.unlock("lock",uuid);
             }
@@ -175,6 +214,9 @@ public class FileUploadServiceImpl implements FileUploadService {
 
 
 
+    /**
+     * 添加文件路径
+     * */
     private String getFilePath(String sourceFileName,boolean isImage) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         String prefixPath = ossConfig.getALIYUN_OSS_DIR_PREFIX_ONE();
@@ -187,6 +229,9 @@ public class FileUploadServiceImpl implements FileUploadService {
                 StringUtils.substringAfterLast(sourceFileName, ".");
     }
 
+    /**
+     * 解析文件相对路径
+     * */
     private String modifyFileName(String fileName){
          String str = StringUtils.substringAfterLast(fileName,ossConfig.getALIYUN_OSS_URLPREFIX());
          if ("".equals(str)){
@@ -195,6 +240,9 @@ public class FileUploadServiceImpl implements FileUploadService {
          return str;
     }
 
+    /**
+     * 修改文件编码为UTF-8
+     * */
     private InputStream create(MultipartFile file) throws IOException {
         if (!file.getOriginalFilename().endsWith("txt")) {
             return file.getInputStream();
@@ -236,6 +284,9 @@ public class FileUploadServiceImpl implements FileUploadService {
         return bos.toByteArray();
     }*/
 
+    /**
+     * 获取文件详细编码
+     * */
     private static String getCode2(InputStream inputStream) throws IOException {
         UniversalDetector detector = new UniversalDetector(null);
         byte[] buf = new byte[4096];
@@ -251,22 +302,25 @@ public class FileUploadServiceImpl implements FileUploadService {
         return detector.getDetectedCharset();
     }
 
+    /**
+     * 获取文件简单编码
+     * */
     private String getCode(InputStream inputStream) {
         String charsetName = "gbk";
         byte[] head = new byte[3];
         try {
             inputStream.read(head);
             inputStream.close();
-            if (head[0] == -1 && head[1] == -2 ) //0xFFFE
+            if (head[0] == -1 && head[1] == -2 ) // 0xFFFE
             {
                 charsetName = "UTF-16";
-            } else if (head[0] == -2 && head[1] == -1 ) //0xFEFF
+            } else if (head[0] == -2 && head[1] == -1 ) // 0xFEFF
             {
-                charsetName = "Unicode";//包含两种编码格式：UCS2-Big-Endian和UCS2-Little-Endian
+                charsetName = "Unicode";// 包含两种编码格式：UCS2-Big-Endian和UCS2-Little-Endian
             } else if(head[0]==-27 && head[1]==-101 && head[2] ==-98) {
-                charsetName = "UTF-8"; //UTF-8(不含BOM)
+                charsetName = "UTF-8"; // UTF-8(不含BOM)
             } else if(head[0]==-17 && head[1]==-69 && head[2] ==-65) {
-                charsetName = "UTF-8"; //UTF-8-BOM
+                charsetName = "UTF-8"; // UTF-8-BOM
             }
         } catch (Exception e) {
             e.printStackTrace();

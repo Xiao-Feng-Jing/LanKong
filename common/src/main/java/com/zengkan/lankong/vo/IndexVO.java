@@ -17,7 +17,4 @@ import java.util.List;
 public class IndexVO implements Serializable {
     private static final long serialVersionUID = -3372258154560107298L;
 
-
-
-
 }

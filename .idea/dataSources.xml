@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="shoppingmall@rm-bp15917c1vl5bf79uso.mysql.rds.aliyuncs.com" uuid="e05c7d50-38ab-422d-a8e0-1aafd8398bc7">
+    <data-source source="LOCAL" name="shoppingmall@rm-bp15917c1vl5bf79uso.mysql.rds.aliyuncs.com" uuid="8eabc4f4-52d2-46c4-9160-f74c923f63b1">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>

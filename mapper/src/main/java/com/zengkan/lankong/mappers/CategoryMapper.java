@@ -58,10 +58,16 @@ public interface CategoryMapper{
     void insert(GoodsCategory goodsCategory);
 
     /**
-     * 根据商品id修改商品分类
-     * @param goodsCategory 新的商品数据
+     * 根据分类id修改商品分类
+     * @param goodsCategory 新的分类数据
      */
     @Update("update goods_category set category_name = #{categoryName} where category_id = #{categoryId}")
     void updateByIdAndName(GoodsCategory goodsCategory);
 
+    /**
+     * 根据分类id查询分类名
+     * @param cid 分类id
+     * */
+    @Select("select category_name from goods_category where category_id = #{cid}")
+    String findByIdToName(long cid);
 }

@@ -12,7 +12,6 @@ import java.security.NoSuchAlgorithmException;
  * @Date: 2021/02/25/20:46
  * @Description:
  **/
-@Component
 public class ShaUtil {
     /**
      * SHA加密类
@@ -20,7 +19,7 @@ public class ShaUtil {
      * @param str 要加密的字符串
      * @return 加密后的字符串
      */
-    public String getSha(String str) {
+    public static String getSha(String str) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA");
             md.update(str.getBytes());

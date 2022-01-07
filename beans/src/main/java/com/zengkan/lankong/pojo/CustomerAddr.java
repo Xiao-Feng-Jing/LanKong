@@ -4,7 +4,7 @@ package com.zengkan.lankong.pojo;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @author zengkan
@@ -53,6 +53,6 @@ public class CustomerAddr implements Serializable {
   /**
    * 最后修改时间
    * */
-  private Date modifiedTime;
+  private LocalDateTime modifiedTime;
 
 }

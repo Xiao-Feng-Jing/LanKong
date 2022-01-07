@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -16,7 +17,7 @@ import java.util.Date;
  **/
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel("前面数据模型")
+@ApiModel("签名数据模型")
 public class OssPolicyResult {
     @ApiModelProperty("访问身份验证中用到用户标识")
     private String accessKeyId;

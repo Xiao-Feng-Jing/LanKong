@@ -1,5 +1,6 @@
 package com.zengkan.lankong.vo;
 
+import com.zengkan.lankong.pojo.CategoryRecommends;
 import com.zengkan.lankong.pojo.GoodsCategory;
 import lombok.Data;
 
@@ -22,7 +23,7 @@ public class CategoryVO implements Serializable {
     /**
      * 推荐分类
      * */
-    private GoodsCategory firstCategory;
+    private CategoryRecommendsVO categoryRecommend;
 
     /**
      * 推荐分类的子分类
@@ -32,5 +33,5 @@ public class CategoryVO implements Serializable {
     /**
      * 实现首页分类商品推荐
      * */
-    private List<SpuVo> products;
+    private List<GoodsVO> products;
 }

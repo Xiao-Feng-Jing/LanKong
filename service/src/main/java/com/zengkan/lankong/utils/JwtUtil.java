@@ -41,14 +41,14 @@ public class JwtUtil {
 
     /**
      * token是否过期
-     * @return true：过期
+     * @return false：过期
      */
     public static boolean isTokenExpired(String token) {
         try {
             Jwts.parser().setSigningKey(getSecret()).parseClaimsJws(token).getBody();
             return true;
         }catch (ExpiredJwtException e){
-            log.error("token 过期");
+            log.error("token 过期或者不存在");
             return false;
         } catch (Exception e) {
             return false;

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface SpecMapper {
 
     /**
@@ -44,4 +43,5 @@ public interface SpecMapper {
      * */
     @Delete("delete from tb_specification where category_id = #{id}")
     void deleteById(long id);
+
 }

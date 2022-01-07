@@ -15,7 +15,6 @@ import java.util.List;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface IndexImgMapper {
 
     @Select("select id,url,create_time,update_time from index_img")

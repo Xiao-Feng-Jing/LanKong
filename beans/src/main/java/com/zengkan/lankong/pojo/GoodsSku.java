@@ -4,8 +4,7 @@ package com.zengkan.lankong.pojo;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @author zengkan
@@ -19,14 +18,13 @@ public class GoodsSku implements Serializable {
   private String spuId;
   private String title;
   private String images;
-  private BigDecimal price;
-  private BigDecimal salePrice;
+  private long price;
+  private long salePrice;
   private boolean enable;
   private String indexes;
   private String ownSpec;
-  private Date createTime;
-  private Date lastUpdateTime;
+  private LocalDateTime createTime;
+  private LocalDateTime lastUpdateTime;
   //非数据库信息
   private long stock;
-
 }

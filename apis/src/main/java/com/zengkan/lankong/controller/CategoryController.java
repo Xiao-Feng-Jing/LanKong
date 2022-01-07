@@ -1,4 +1,4 @@
-package com.zengkan.lankong.controller.admin;
+package com.zengkan.lankong.controller;
 
 import com.zengkan.lankong.pojo.GoodsCategory;
 import com.zengkan.lankong.service.CategoryService;
@@ -6,6 +6,7 @@ import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * @Description:
  **/
 @RestController
-@RequestMapping("manage/category")
+@RequestMapping("/category")
 @Api(tags = "商品分类管理")
 public class CategoryController {
 
@@ -37,8 +38,8 @@ public class CategoryController {
      * @return
      */
     @GetMapping("/list")
-    @ApiOperation(value = "商品分类查询",notes = "根据层级显示")
-    @ApiImplicitParam(name = "pid",value = "父分类id",required = true,paramType = "query",dataType = "Integer",defaultValue = "0")
+    @ApiOperation(value = "商品分类查询", notes = "根据层级显示，权限需要：无")
+    @ApiImplicitParam(name = "pid", value = "父分类id", required = true, paramType = "query", dataType = "Long", defaultValue = "0")
     public ResponseBean listCategory(@RequestParam(value = "pid", defaultValue = "0")Long pid){
         return new ResponseBean(CodeEnum.SUCCESS, categoryService.category(pid));
     }
@@ -48,8 +49,10 @@ public class CategoryController {
      * @param cid 分类ID
      * @return
      */
-    @RequiresRoles("admin")
     @DeleteMapping("/cid/{cid}")
+    @RequiresRoles("admin")
+    @ApiOperation(value = "删除商品分类", notes = "根据分类ID删除, 权限需要：管理员")
+    @ApiImplicitParam(name = "cid", value = "分类id", required = true, paramType = "path", dataType = "Long")
     public ResponseBean deleteCategory(@PathVariable("cid") long cid) {
         categoryService.deleteById(cid);
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
@@ -61,6 +64,7 @@ public class CategoryController {
      * */
     @PostMapping
     @RequiresRoles("admin")
+    @ApiOperation(value = "添加商品分类", notes = "前端传入分类的数据模型，权限需要：管理员")
     public ResponseBean saveCategory(@RequestBody GoodsCategory goodsCategory){
         GoodsCategory category = categoryService.saveCategory(goodsCategory);
         return new ResponseBean(CodeEnum.SAVE_SUCCESS, category);
@@ -72,6 +76,7 @@ public class CategoryController {
      * */
     @PutMapping
     @RequiresRoles("admin")
+    @ApiOperation(value = "修改商品分类", notes = "前端传入分类的数据模型，权限需要：管理员")
     public ResponseBean updateCategory(@RequestBody GoodsCategory goodsCategory){
         categoryService.updateCategory(goodsCategory);
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);

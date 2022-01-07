@@ -20,7 +20,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel(value = "商品数据模型")
-public class SpuVo extends GoodsSpu {
+public class SpuVO extends GoodsSpu {
 
     private static final long serialVersionUID = 8863789918388526100L;
     /**
@@ -36,4 +36,9 @@ public class SpuVo extends GoodsSpu {
      * sku列表
      */
     private List<GoodsSku> skus;
+
+    /**
+     * 商品收藏数据
+     * */
+    private Long collects;
 }

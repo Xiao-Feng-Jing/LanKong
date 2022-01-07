@@ -15,7 +15,6 @@ import java.util.List;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface SpuDetailMapper {
 
     /**
@@ -48,7 +47,7 @@ public interface SpuDetailMapper {
      * @param ids spuId集合
      * */
     @Delete("<script>delete from spu_detail where spu_id in " +
-            "<foreach collection='collection' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
             "#{ids}"+
             "</foreach>"+
             "</script>")

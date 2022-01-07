@@ -1,8 +1,5 @@
 package com.zengkan.lankong.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.zengkan.lankong.enums.ExceptionEnum;
@@ -16,25 +13,18 @@ import com.zengkan.lankong.pojo.GoodsSpu;
 import com.zengkan.lankong.pojo.SpuDetail;
 import com.zengkan.lankong.pojo.WarehouseGoods;
 import com.zengkan.lankong.service.CategoryService;
-import com.zengkan.lankong.service.FileUploadService;
 import com.zengkan.lankong.service.GoodsService;
-import com.zengkan.lankong.utils.MultipartFileUtil;
+import com.zengkan.lankong.utils.RedisUtil;
 import com.zengkan.lankong.utils.UUIDUtil;
-import com.zengkan.lankong.vo.FileUploadResult;
-import com.zengkan.lankong.vo.PageResult;
-import com.zengkan.lankong.vo.SpuQueryByPage;
-import com.zengkan.lankong.vo.SpuVo;
+import com.zengkan.lankong.vo.*;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -48,40 +38,40 @@ import java.util.stream.Collectors;
 @Service
 public class GoodsServiceImpl implements GoodsService {
 
-    private static final Logger logger = LoggerFactory.getLogger(GoodsServiceImpl.class);
-
     private final GoodsSpuMapper goodsSpuMapper;
     private final CategoryService categoryService;
     private final GoodsSkuMapper goodsSkuMapper;
     private final SpuDetailMapper spuDetailMapper;
     private final WarehouseGoodsMapper warehouseGoodsMapper;
-    private final FileUploadService fileUploadService;
+    private final RedisUtil redisUtil;
 
     @Autowired
-    public GoodsServiceImpl(GoodsSpuMapper goodsSpuMapper, CategoryService categoryService, GoodsSkuMapper goodsSkuMapper, SpuDetailMapper spuDetailMapper, WarehouseGoodsMapper warehouseGoodsMapper, FileUploadService fileUploadService) {
+    public GoodsServiceImpl(GoodsSpuMapper goodsSpuMapper, CategoryService categoryService, GoodsSkuMapper goodsSkuMapper, SpuDetailMapper spuDetailMapper, WarehouseGoodsMapper warehouseGoodsMapper, RedisUtil redisUtil) {
         this.goodsSpuMapper = goodsSpuMapper;
         this.categoryService = categoryService;
         this.goodsSkuMapper = goodsSkuMapper;
         this.spuDetailMapper = spuDetailMapper;
         this.warehouseGoodsMapper = warehouseGoodsMapper;
-        this.fileUploadService = fileUploadService;
+        this.redisUtil = redisUtil;
     }
 
     @Override
-    public PageResult<SpuVo> pageList(SpuQueryByPage spuQueryByPage) {
+    public PageResult<SpuVO> pageList(SpuQueryByPage spuQueryByPage) {
 
         //分页查询最多100条
         PageHelper.startPage(spuQueryByPage.getPage(),Math.min(spuQueryByPage.getRows(),100));
 
         Page<GoodsSpu> pageInfo = (Page<GoodsSpu>) this.goodsSpuMapper.pageList(spuQueryByPage);
-
-        List<SpuVo> list = pageInfo.getResult().stream().map(spu -> {
-            SpuVo spuVo = new SpuVo();
+        if (pageInfo == null) {
+            throw new MyException(ExceptionEnum.SPU_NOT_FOUND);
+        }
+        List<SpuVO> list = pageInfo.getResult().stream().map(spu -> {
+            SpuVO spuVo = new SpuVO();
             //1.属性拷贝
             BeanUtils.copyProperties(spu,spuVo);
 
             //2.查询spu的商品分类名称，各级分类
-            List<String> nameList = this.categoryService.queryNameByIds(Arrays.asList(spu.getCid1(),spu.getCid2(),spu.getCid3()));
+            List<String> nameList = this.categoryService.queryNameByIds(Arrays.asList(spu.getCid1(), spu.getCid2(), spu.getCid3()));
             //3.拼接名字,并存入
             spuVo.setCname(StringUtils.join(nameList,"/"));
 
@@ -93,32 +83,40 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void saveGoods(SpuVo spuVo) {
+    public void saveGoods(SpuVO spuVo) {
 
-        //保存spu
-        //生成唯一spuId
-        spuVo.setSpuId(UUIDUtil.uuid());
-        /*默认上架*/
-        spuVo.setSaleable(true);
-        /*默认新品*/
-        spuVo.setNew(true);
-        spuVo.setCreateDate(new Date());
-        spuVo.setModifiedTime(spuVo.getCreateDate());
-        this.goodsSpuMapper.save(spuVo);
+        try {
+            //保存spu
+            //生成唯一spuId
+            spuVo.setSpuId(UUIDUtil.uuid());
+            /*默认上架*/
+            spuVo.setSaleable(true);
+            /*默认新品*/
+            spuVo.setNew(true);
+            spuVo.setCreateDate(LocalDateTime.now());
+            spuVo.setModifiedTime(spuVo.getCreateDate());
+            this.goodsSpuMapper.save(spuVo);
 
-        //保存spuDetail
-        SpuDetail spuDetail = spuVo.getSpuDetail();
-        spuDetail.setSpuId(spuVo.getSpuId());
-        detailsStringToMultipartFile(spuDetail,null,false);
-        this.spuDetailMapper.save(spuDetail);
+            //保存spuDetail
+            SpuDetail spuDetail = spuVo.getSpuDetail();
+            spuDetail.setSpuId(spuVo.getSpuId());
+            this.spuDetailMapper.save(spuDetail);
 
-        //保存sku和库存信息
-        saveSkuAndStock(spuVo.getSkus(),spuVo.getSpuId());
+            //保存sku和库存信息
+            saveSkuAndStock(spuVo.getSkus(),spuVo.getSpuId());
+
+            redisUtil.zSet("collect", spuVo.getSpuId(), 0);
+        } catch (Exception e) {
+            throw new MyException(ExceptionEnum.GOODS_SAVE_ERROR);
+        }
     }
 
+    /**
+     * 更新商品信息
+     * */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void updateGoods(SpuVo spuVo) {
+    public void updateGoods(SpuVO spuVo) {
         /*
          * 更新策略：
          *      1.判断spu_detail中的spec_template字段新旧是否一致
@@ -126,20 +124,23 @@ public class GoodsServiceImpl implements GoodsService {
          *      3.如果不一致，说明修改了特有属性，那么需要把原来的sku全部删除，然后添加新的sku
          */
         //更新spu
-        spuVo.setSaleable(true);
-        spuVo.setModifiedTime(new Date());
-        this.goodsSpuMapper.updateBySpuId(spuVo);
-        //更新spuDetail
-        SpuDetail spuDetail = spuVo.getSpuDetail();
-        //获取old特有模板
-        SpuDetail oldDetail = this.spuDetailMapper.queryById(spuVo.getSpuId());
-        String oldTemplate = oldDetail.getSpecTemplate();
-        //判断是否更改
-        //更改 sku insert 未更改 sku insert
-        updateSkuAndStock(spuVo.getSkus(),spuVo.getSpuId(), !spuDetail.getSpecTemplate().equals(oldTemplate));
-        spuDetail.setSpuId(spuVo.getSpuId());
-        detailsStringToMultipartFile(spuDetail,oldDetail,true);
-        this.spuDetailMapper.updateBySpuId(spuDetail);
+        try {
+            spuVo.setSaleable(true);
+            spuVo.setModifiedTime(LocalDateTime.now());
+            this.goodsSpuMapper.updateBySpuId(spuVo);
+            //更新spuDetail
+            SpuDetail spuDetail = spuVo.getSpuDetail();
+            //获取old特有模板
+            SpuDetail oldDetail = this.spuDetailMapper.queryById(spuVo.getSpuId());
+            String oldTemplate = oldDetail.getSpecTemplate();
+            //判断是否更改
+            //更改 sku insert 未更改 sku insert
+            updateSkuAndStock(spuVo.getSkus(), spuVo.getSpuId(), !spuDetail.getSpecTemplate().equals(oldTemplate));
+            spuDetail.setSpuId(spuVo.getSpuId());
+            this.spuDetailMapper.updateBySpuId(spuDetail);
+        } catch (Exception e) {
+            throw new MyException(ExceptionEnum.GOODS_UPDATE_ERROR);
+        }
     }
 
     private void updateSkuAndStock(List<GoodsSku> skus, String spuId, boolean b) {
@@ -147,7 +148,7 @@ public class GoodsServiceImpl implements GoodsService {
         //获取当前数据库中spu_id = id的sku信息
         List<GoodsSku> oldSkuList = goodsSkuMapper.selectSkuBySpuId(spuId);
         if (b){
-            updateSkuAndStock(oldSkuList,skus,spuId);
+            updateSkuAndStock(oldSkuList, skus, spuId);
         }else {
             List<String> ids = oldSkuList.stream()
                     .map(GoodsSku::getSkuId)
@@ -160,11 +161,11 @@ public class GoodsServiceImpl implements GoodsService {
             }
 
             //新增sku和库存
-            saveSkuAndStock(skus,spuId);
+            saveSkuAndStock(skus, spuId);
         }
     }
     private void updateSkuAndStock(List<GoodsSku> oldSkuList,List<GoodsSku> skus,String spuId){
-        //判断是更新时是否有新的sku被添加：
+        //判断更新时是否有新的sku被添加：
         //如果对已有数据更新的话，则此时oldList中的数据和skus中的ownSpec是相同的，
         //否则则需要新增
         int count = 0;
@@ -172,21 +173,19 @@ public class GoodsServiceImpl implements GoodsService {
             if (!sku.isEnable()){
                 continue;
             }
+
             for (GoodsSku old : oldSkuList) {
-                if (old.getOwnSpec().equals(sku.getOwnSpec())){
+                if (old.getOwnSpec().equals(sku.getOwnSpec())) {
                     //更新sku
                     sku.setSkuId(old.getSkuId());
-                    sku.setSpuId(old.getSpuId());
-                    sku.setImages(old.getImages());
-                    sku.setEnable(old.isEnable());
-                    sku.setLastUpdateTime(new Date());
+                    sku.setLastUpdateTime(LocalDateTime.now());
                     sku.setCreateTime(old.getCreateTime());
                     goodsSkuMapper.updateBySkuId(sku);
                     //更新库存信息
                     updateWarehouseGoods(sku);
                     oldSkuList.remove(old);
                     break;
-                }else {
+                } else {
                     ++count;
                 }
             }
@@ -201,21 +200,30 @@ public class GoodsServiceImpl implements GoodsService {
 
         //处理脏数据
         if (!oldSkuList.isEmpty()){
-            for (GoodsSku goodsSku : oldSkuList) {
-                goodsSkuMapper.deleteBySkuId(goodsSku.getSkuId());
-                warehouseGoodsMapper.deleteBySkuId(goodsSku.getSkuId());
-            }
+            // 获取skuId集合
+            List<String> skuIds = oldSkuList
+                    .stream()
+                    .map(GoodsSku::getSkuId)
+                    .collect(Collectors.toList());
+
+            goodsSkuMapper.deleteBySkuIds(skuIds);
+            warehouseGoodsMapper.deleteBySkuIds(skuIds);
         }
     }
 
 
+    /**
+     * 商品上下架
+     * */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void goodsSoldOut(String spuId) {
-        GoodsSpu goodsSpu = goodsSpuMapper.selectBySpuId(spuId);
-        //上下架
-        goodsSpu.setSaleable(!goodsSpu.isSaleable());
-        goodsSpuMapper.updateBySpuIdSelective(goodsSpu);
+    public void goodsSoldOut(List<String> spuId) {
+        try {
+            //上下架
+            goodsSpuMapper.updateBySpuIdSelective(spuId);
+        } catch (Exception e) {
+            throw new MyException(ExceptionEnum.GOODS_UPDATE_ERROR);
+        }
     }
 
     /**
@@ -225,19 +233,24 @@ public class GoodsServiceImpl implements GoodsService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteGoods(List<String> ids) {
-        //删除spu
-        goodsSpuMapper.deleteGoods(ids);
+        redisUtil.zRemove("collect", ids);
+        try {
+            //删除spu
+            goodsSpuMapper.deleteGoods(ids);
 
-        //删除spu_detail中的数据
-        spuDetailMapper.deleteBySpuIds(ids);
+            //删除spu_detail中的数据
+            spuDetailMapper.deleteBySpuIds(ids);
 
-        //删除sku
-        List<GoodsSku> goodsSkuList = goodsSkuMapper.selectSkuBySpuIds(ids);
-        List<String> skuIds = goodsSkuList.stream().map(GoodsSku::getSkuId).collect(Collectors.toList());
-        goodsSkuMapper.deleteBySpuId(ids);
-        //删除库存
-        if (!skuIds.isEmpty()){
-            warehouseGoodsMapper.deleteBySkuIds(skuIds);
+            //删除sku
+            List<GoodsSku> goodsSkuList = goodsSkuMapper.selectSkuBySpuIds(Collections.singleton(ids));
+            List<String> skuIds = goodsSkuList.stream().map(GoodsSku::getSkuId).collect(Collectors.toList());
+            goodsSkuMapper.deleteBySpuId(ids);
+            //删除库存
+            if (!skuIds.isEmpty()){
+                warehouseGoodsMapper.deleteBySkuIds(skuIds);
+            }
+        } catch (Exception e) {
+            throw new MyException(ExceptionEnum.ERROR);
         }
 
     }
@@ -262,7 +275,7 @@ public class GoodsServiceImpl implements GoodsService {
      * 根据spuId 查询 商品数据
      * */
     @Override
-    public SpuVo querySpuById(String spuId) {
+    public SpuVO querySpuById(String spuId) {
         /*
          * 第一页所需信息如下：
          * 1.商品的分类信息、所属品牌、商品标题、商品卖点（子标题）
@@ -276,10 +289,12 @@ public class GoodsServiceImpl implements GoodsService {
         SpuDetail spuDetail = querySpuDetailBySpuId(spuId);
 
         List<GoodsSku> skus = querySkuBySpuId(spuId);
-        SpuVo spuVo = new SpuVo();
-        BeanUtils.copyProperties(goodsSpu,spuVo);
+        SpuVO spuVo = new SpuVO();
+        // 属性拷贝
+        BeanUtils.copyProperties(goodsSpu, spuVo);
         spuVo.setSkus(skus);
         spuVo.setSpuDetail(spuDetail);
+        spuVo.setCollects(redisUtil.zScore("collect", spuId).longValue());
         return spuVo;
     }
 
@@ -296,16 +311,7 @@ public class GoodsServiceImpl implements GoodsService {
             throw new MyException(ExceptionEnum.SKU_NOT_FOUND);
         }
         List<String> ids = skuList.stream().map(GoodsSku::getSkuId).collect(Collectors.toList());
-        List<WarehouseGoods> stockList = warehouseGoodsMapper.queryBySpuIds(ids);
-        // 查询库存
-        for (GoodsSku sku : skuList) {
-            for (WarehouseGoods warehouseGoods : stockList) {
-                if (warehouseGoods.getSkuId().equals(sku.getSkuId())){
-                    sku.setStock(warehouseGoods.getCurrentCnt());
-                    break;
-                }
-            }
-        }
+        selectWarehouseGoodsBySkuIds(ids, skuList);
         return skuList;
     }
 
@@ -324,6 +330,21 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     /**
+     * 根据skuId
+     * @param skuIds skuId集合
+     * @return sku信息
+     * */
+    @Override
+    public List<GoodsSku> querySkuBySkuIds(List<String> skuIds) {
+        List<GoodsSku> skus = goodsSkuMapper.selectBySkuIds(skuIds);
+        if (skus == null || skus.isEmpty()) {
+            throw new MyException(ExceptionEnum.SKU_NOT_FOUND);
+        }
+        selectWarehouseGoodsBySkuIds(skuIds, skus);
+        return skus;
+    }
+
+    /**
      * 保存商品信息
      * */
     private void saveSkuAndStock(List<GoodsSku> skus, String spuId) {
@@ -334,11 +355,10 @@ public class GoodsServiceImpl implements GoodsService {
             //保存sku
             sku.setSpuId(spuId);
             sku.setSkuId(UUIDUtil.uuid());
-            sku.setCreateTime(new Date());
+            sku.setCreateTime(LocalDateTime.now());
             sku.setLastUpdateTime(sku.getCreateTime());
             goodsSkuMapper.save(sku);
             saveWarehouseGoods(sku);
-
         }
     }
 
@@ -354,6 +374,9 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
 
+    /**
+     * 更新库存信息
+     * */
     private void updateWarehouseGoods(GoodsSku sku) {
         WarehouseGoods warehouseGoods = new WarehouseGoods();
         warehouseGoods.setSkuId(sku.getSkuId());
@@ -361,7 +384,27 @@ public class GoodsServiceImpl implements GoodsService {
         warehouseGoodsMapper.updateBySkuId(warehouseGoods);
     }
 
-    private void detailsStringToMultipartFile(SpuDetail spuDetail,SpuDetail oldSpuDetail,boolean isUpdate){
+    /**
+     * 根据skuId集合批量查询库存
+     *
+     * */
+    public void selectWarehouseGoodsBySkuIds(List<String> skuIds, List<GoodsSku> skus) {
+        List<WarehouseGoods> stockList = warehouseGoodsMapper.queryBySpuIds(skuIds);
+        // 查询库存
+        for (GoodsSku sku : skus) {
+            for (WarehouseGoods warehouseGoods : stockList) {
+                if (warehouseGoods.getSkuId().equals(sku.getSkuId())){
+                    sku.setStock(warehouseGoods.getCurrentCnt());
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * 上传
+     * */
+    /*private void detailsStringToMultipartFile(SpuDetail spuDetail,SpuDetail oldSpuDetail,boolean isUpdate){
         FileUploadResult results = null;
         MultipartFileUtil multipartUtil = new MultipartFileUtil();
         multipartUtil.setFile(spuDetail.getDescription());
@@ -381,5 +424,5 @@ public class GoodsServiceImpl implements GoodsService {
         map.put("fileName",results.getName());
         map.put("maxSize",results.getFileSize()-1);
         spuDetail.setDescription(JSON.toJSONString(map));
-    }
+    }*/
 }

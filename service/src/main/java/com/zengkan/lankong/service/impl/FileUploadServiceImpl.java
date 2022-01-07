@@ -65,9 +65,9 @@ public class FileUploadServiceImpl implements FileUploadService {
         List<FileUploadResult> list = new CopyOnWriteArrayList<>();
         for (MultipartFile file : files) {
             try {
-                list.add(ossUploadService.upload(getFilePath(file.getOriginalFilename(),isImage),file).get());
+                list.add(ossUploadService.upload(file.getName(), getFilePath(file.getOriginalFilename(),isImage),file).get());
             } catch (Exception e) {
-                log.error("{}: 上传失败",file.getOriginalFilename());
+                throw new MyException(ExceptionEnum.ERROR, list);
             }
         }
 
@@ -104,7 +104,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
             out.close();
             in.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("{}: 下载失败",fileName);
             throw new MyException(ExceptionEnum.DOWNLOAD_FILE_ERROR);
         }

@@ -15,7 +15,6 @@ import java.util.List;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface CategoryMapper{
 
     /**
@@ -23,7 +22,7 @@ public interface CategoryMapper{
      * @param pid 父分类id
      * @return 商品分类实体类集合
      */
-    @Select("select category_id, category_name, parent_id, is_parent, category_level,category_status from goods_category where parent_id = #{pid}")
+    @Select("select category_id, category_name, parent_id, is_parent, category_level from goods_category where parent_id = #{pid}")
     List<GoodsCategory> category(long pid);
 
     /**
@@ -31,7 +30,7 @@ public interface CategoryMapper{
      * @param cid 商品id
      * @return 商品分类实体类
      */
-    @Select("select category_id, category_name, parent_id, is_parent, category_level,category_status from goods_category where category_id = #{cid}")
+    @Select("select category_id, category_name, parent_id, is_parent, category_level from goods_category where category_id = #{cid}")
     GoodsCategory findById(long cid);
 
     /**
@@ -53,7 +52,7 @@ public interface CategoryMapper{
      * 添加商品分类
      * @param goodsCategory 全新商品分类
      */
-    @Insert("INSERT INTO goods_category(category_name,parent_id,is_parent,category_level) VALUES(#{categoryName}, #{parentId},false,#{categoryLevel});")
+    @Insert("INSERT INTO goods_category(category_name,parent_id,is_parent,category_level) VALUES(#{categoryName}, #{parentId},#{isParent},#{categoryLevel});")
     @Options(useGeneratedKeys = true, keyProperty = "categoryId", keyColumn = "category_id")
     void insert(GoodsCategory goodsCategory);
 
@@ -70,4 +69,12 @@ public interface CategoryMapper{
      * */
     @Select("select category_name from goods_category where category_id = #{cid}")
     String findByIdToName(long cid);
+
+    /**
+     * 根据分类id集合查询商品分类
+     * @param categoryIds 分类id集合
+     * @return 商品分类实体类集合
+     */
+    @Select("select category_id, category_name, parent_id, is_parent, category_level from goods_category where parent_id = #{pid}")
+    List<GoodsCategory> categorysToIds(List<Long> categoryIds);
 }

@@ -1,12 +1,10 @@
 package com.zengkan.lankong.pojo;
 
-
-
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -48,7 +46,7 @@ public class OrderMaster implements Serializable {
   /**
    * 订单创建时间
    * */
-  private Date createTime;
+  private LocalDateTime createTime;
   /**
    * 物流名称
    * */
@@ -110,5 +108,5 @@ public class OrderMaster implements Serializable {
   /**
    * 订单状态
    * */
-  private transient Integer status;
+  private transient long status;
 }

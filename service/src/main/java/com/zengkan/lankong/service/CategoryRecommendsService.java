@@ -1,9 +1,7 @@
 package com.zengkan.lankong.service;
 
 import com.zengkan.lankong.pojo.CategoryRecommends;
-import com.zengkan.lankong.pojo.GoodsCategory;
 import com.zengkan.lankong.vo.CategoryRecommendsVO;
-import com.zengkan.lankong.vo.CategoryVO;
 
 import java.util.List;
 
@@ -30,8 +28,9 @@ public interface CategoryRecommendsService {
 
     /**
      * 添加推荐分类
+     * @param categoryRecommends 推荐分类数据对象
      * */
-    CategoryRecommends saveCategory(long cid);
+    CategoryRecommendsVO saveCategory(CategoryRecommends categoryRecommends);
 
     /**
      * 更新推荐分类

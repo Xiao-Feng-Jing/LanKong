@@ -4,13 +4,15 @@ package com.zengkan.lankong.pojo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @author zengkan
  */
+@EqualsAndHashCode
 @Data
 @ApiModel("商品spu数据模型")
 public class GoodsSpu implements Serializable {
@@ -27,6 +29,6 @@ public class GoodsSpu implements Serializable {
   private long cid3;
   private boolean saleable;
   private boolean isNew;
-  private Date createDate;
-  private Date modifiedTime;
+  private LocalDateTime createDate;
+  private LocalDateTime modifiedTime;
 }

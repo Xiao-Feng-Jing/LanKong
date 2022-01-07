@@ -12,9 +12,9 @@ import java.util.List;
  * @Date: 2021/04/21/0:35
  * @Description:
  **/
-public interface IndexImgService {
+public interface IndexImageService {
 
-    List<IndexImg> queryUrlList();
+    List<IndexImg> listIndexImages();
 
     IndexImg save(IndexImg indexImg);
 

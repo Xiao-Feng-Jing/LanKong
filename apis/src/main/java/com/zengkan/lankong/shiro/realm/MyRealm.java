@@ -1,13 +1,10 @@
 package com.zengkan.lankong.shiro.realm;
 
-import com.zengkan.lankong.enums.ExceptionEnum;
-import com.zengkan.lankong.exception.MyException;
+import com.zengkan.lankong.pojo.Role;
 import com.zengkan.lankong.pojo.User;
-import com.zengkan.lankong.pojo.UserRole;
-import com.zengkan.lankong.service.UserService;
+import com.zengkan.lankong.service.UserAuthenticationService;
 import com.zengkan.lankong.shiro.token.JwtToken;
 import com.zengkan.lankong.utils.JwtUtil;
-import com.zengkan.lankong.utils.MapUtils;
 import com.zengkan.lankong.utils.RedisUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +18,9 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -36,12 +35,12 @@ import java.util.Map;
 public class MyRealm extends AuthorizingRealm {
 
 
-    private final UserService userService;
+    private final UserAuthenticationService userAuthenticationService;
     private final RedisUtil redisUtil;
 
     @Autowired
-    public MyRealm(UserService userService, RedisUtil redisUtil) {
-        this.userService = userService;
+    public MyRealm(UserAuthenticationService userAuthenticationService, RedisUtil redisUtil) {
+        this.userAuthenticationService = userAuthenticationService;
         this.redisUtil = redisUtil;
     }
 
@@ -59,10 +58,14 @@ public class MyRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         String token=principals.toString();
         User user = (User) redisUtil.getString(token);
-        UserRole userRole = userService.getUserRole(user);
+        if (user == null) {
+            redisUtil.hDelete("user",JwtUtil.checkToken(token).get("id"));
+            throw new IllegalArgumentException("token 过期");
+        }
+        List<Role> userRoles = userAuthenticationService.getUserRole(user);
         SimpleAuthorizationInfo info=new SimpleAuthorizationInfo();
         //查询数据库来获取用户的角色
-        info.addRole(userRole.getRole());
+        info.addRoles(userRoles.stream().map(Role::getRole).collect(Collectors.toList()));
         return info;
     }
 
@@ -72,22 +75,18 @@ public class MyRealm extends AuthorizingRealm {
      */
     @SneakyThrows
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws IllegalArgumentException{
         String jwt= ((JwtToken) token).getToken();
         User user = (User) redisUtil.getString(jwt);
         if (user != null) {
-            Map<String,Object> map = JwtUtil.checkToken(jwt);
-            if (map == null || !map.get("username").equals(user.getUsername())) {
-                throw new MyException(ExceptionEnum.TOKEN_IS_ILLEGAL);
-            }
             boolean shouldRefresh = shouldTokenRefresh(jwt);
             if(shouldRefresh) {
-                jwt = JwtUtil.createToken(MapUtils.getObjectToMap(user));
-                userService.saveToken(jwt,user);
+                userAuthenticationService.saveToken(jwt, user);
             }
             return new SimpleAuthenticationInfo(jwt,jwt,"MyRealm");
         }else {
-            throw new MyException(ExceptionEnum.TOKEN_IS_EXPIRED);
+            redisUtil.hDelete("user",JwtUtil.checkToken(jwt).get("id"));
+            throw new IllegalStateException("token 过期或不存在");
         }
     }
 

@@ -2,9 +2,10 @@ package com.zengkan.lankong.service;
 
 import com.zengkan.lankong.pojo.GoodsSku;
 import com.zengkan.lankong.pojo.SpuDetail;
+import com.zengkan.lankong.vo.GoodsVO;
 import com.zengkan.lankong.vo.PageResult;
 import com.zengkan.lankong.vo.SpuQueryByPage;
-import com.zengkan.lankong.vo.SpuVo;
+import com.zengkan.lankong.vo.SpuVO;
 
 import java.util.List;
 
@@ -16,22 +17,24 @@ import java.util.List;
  * @Description:
  **/
 public interface GoodsService {
-    PageResult<SpuVo> pageList(SpuQueryByPage spuQueryByPage);
+    PageResult<SpuVO> pageList(SpuQueryByPage spuQueryByPage);
 
-    void saveGoods(SpuVo spuVo);
+    void saveGoods(SpuVO spuVo);
 
-    void updateGoods(SpuVo spuVo);
+    void updateGoods(SpuVO spuVo);
     
 
-    void goodsSoldOut(String spuId);
+    void goodsSoldOut(List<String> spuId);
 
     void deleteGoods(List<String> spuId);
 
     GoodsSku querySkuBySkuId(String skuId);
 
-    SpuVo querySpuById(String spuId);
+    SpuVO querySpuById(String spuId);
 
     List<GoodsSku> querySkuBySpuId(String spuId);
 
     SpuDetail querySpuDetailBySpuId(String spuId);
+
+    List<GoodsSku> querySkuBySkuIds(List<String> skuIds);
 }

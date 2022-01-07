@@ -13,6 +13,5 @@ import org.springframework.stereotype.Repository;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface CustomerAddrMapper {
 }

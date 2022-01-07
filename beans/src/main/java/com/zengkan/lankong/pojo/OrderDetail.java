@@ -4,7 +4,7 @@ package com.zengkan.lankong.pojo;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @author zengkan
@@ -41,7 +41,7 @@ public class OrderDetail implements Serializable {
   /**
    * 商品单价
    * */
-  private double productPrice;
+  private int productPrice;
   /**
    * 图片
    * */
@@ -49,6 +49,6 @@ public class OrderDetail implements Serializable {
   /**
    * 最后修改时间
    * */
-  private Date modifiedTime;
+  private LocalDateTime modifiedTime;
 
 }

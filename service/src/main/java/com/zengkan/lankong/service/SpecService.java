@@ -16,5 +16,5 @@ public interface SpecService {
 
     void update(TbSpecification tbSpecification);
 
-    void delete(long cid);
+    void deleteByCategoryId(long cid);
 }

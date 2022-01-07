@@ -1,9 +1,11 @@
 package com.zengkan.lankong.mappers;
 
 import com.zengkan.lankong.pojo.GoodsSku;
+import com.zengkan.lankong.vo.CommoditySalesVO;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,7 +17,6 @@ import java.util.List;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface GoodsSkuMapper {
 
     /**
@@ -27,24 +28,24 @@ public interface GoodsSkuMapper {
     void save(GoodsSku sku);
 
     /**
-     * 根据spuId集合查询sku
+     * 根据spuId集合查询每个spu对应的第一个sku
      * @param ids spuId集合
      * @return sku集合
      * */
-    @Select("<script>select sku_id,spu_id,title,images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time " +
+    @Select("<script>select sku_id, spu_id, title, images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time " +
             "from goods_sku where spu_id in " +
-            "<foreach collection='collection' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
             "#{ids}"+
-            "</foreach>"+
+            "</foreach> group by spu_id "+
             "</script>")
-    List<GoodsSku> selectSkuBySpuIds(List<String> ids);
+    List<GoodsSku> selectSkuBySpuIds(Collection<Object> ids);
 
     /**
      * 根据spuId查询sku
      * @param spuId spuId
      * @return sku集合
      * */
-    @Select("select sku_id,spu_id,title,images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time from goods_sku where spu_id = #{spuId}")
+    @Select("select sku_id, spu_id, title, images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time from goods_sku where spu_id = #{spuId}")
     List<GoodsSku> selectSkuBySpuId(String spuId);
 
     /**
@@ -62,11 +63,22 @@ public interface GoodsSkuMapper {
     void deleteBySkuId(String skuId);
 
     /**
+     * 根据skuId 删除sku数据
+     * @param ids spuId集合
+     * */
+    @Delete("<script>delete from goods_sku where sku_id in" +
+            "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "#{ids}"+
+            "</foreach>"+
+            "</script>")
+    void deleteBySkuIds(List<String> ids);
+
+    /**
      * 根据spuId 删除sku数据
      * @param ids spuId集合
      * */
     @Delete("<script>delete from goods_sku where spu_id in" +
-            "<foreach collection='collection' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
             "#{ids}"+
             "</foreach>"+
             "</script>")
@@ -76,6 +88,18 @@ public interface GoodsSkuMapper {
      * 根据skuId查询sku
      * @param skuId skuId
      * */
-    @Select("select sku_id,spu_id,title,images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time from goods_sku where sku_id = #{skuId}")
+    @Select("select sku_id, spu_id, title, images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time from goods_sku where sku_id = #{skuId}")
     GoodsSku querySkuBySkuId(String skuId);
+
+    /**
+     * 根据skuId查询sku
+     * @param skuIds skuId集合
+     * @return*/
+    @Select("<script>Select sku_id, spu_id, title, images, price, sale_price, enable, indexes, own_spec, create_time, last_update_time" +
+            " from goods_sku where sku_id in" +
+            "<foreach collection='skuIds' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "#{ids}"+
+            "</foreach>"+
+            "</script>")
+    List<GoodsSku> selectBySkuIds(List<String> skuIds);
 }

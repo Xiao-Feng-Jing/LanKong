@@ -3,4 +3,4 @@ spring:
     active: dev,plugin,api-dev
   mvc:
     format:
-      date: yyyy-MM-dd HH:mm:ss
+      date-time: yyyy-MM-dd HH:mm:ss

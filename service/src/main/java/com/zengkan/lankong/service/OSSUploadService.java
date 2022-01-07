@@ -15,7 +15,7 @@ import java.util.List;
  * @Description:
  **/
 public interface OSSUploadService {
-    ListenableFuture<FileUploadResult> upload(String fileName, MultipartFile file);
+    ListenableFuture<FileUploadResult> upload(String oldFileName, String fileName, MultipartFile file);
 
     void delete(String fileName);
 }

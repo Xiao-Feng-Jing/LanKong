@@ -59,7 +59,8 @@ public class SpecServiceImpl implements SpecService {
     }
 
     @Override
-    public void delete(long cid) {
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteByCategoryId(long cid) {
         /*
         删除该分类id下的模板
         */

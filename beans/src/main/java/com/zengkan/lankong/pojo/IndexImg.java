@@ -1,9 +1,8 @@
 package com.zengkan.lankong.pojo;
 
-
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @author zengkan
@@ -20,7 +19,7 @@ public class IndexImg {
   private long indexType;
   private long seq;
   private long status;
-  private Date createTime;
-  private Date updateTime;
+  private LocalDateTime createTime;
+  private LocalDateTime updateTime;
 
 }

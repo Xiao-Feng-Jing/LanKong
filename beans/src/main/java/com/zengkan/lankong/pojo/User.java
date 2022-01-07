@@ -1,9 +1,10 @@
 package com.zengkan.lankong.pojo;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,5 +22,5 @@ public class User implements Serializable {
     private String password;
     private String url;
     private boolean stats;
-    private Date modifiedTime;
+    private LocalDateTime modifiedTime;
 }

@@ -18,7 +18,6 @@ import java.util.List;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface CategoryRecommendsMapper {
     /**
      * 添加推荐分类
@@ -42,6 +41,8 @@ public interface CategoryRecommendsMapper {
     /**
      * 查询所有推荐分类
      * */
-    @Select("select id, categort_id, create_time, update_time from category_recommends")
+    @Select("select id, rec.category_id, create_time, update_time, category_name " +
+            "from category_recommends as rec left join goods_category goods " +
+            "on rec.category_id = goods.category_id")
     List<CategoryRecommendsVO> queryCategoriesc();
 }

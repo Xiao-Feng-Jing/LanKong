@@ -62,7 +62,7 @@ public class GlobalExceptionHandle {
     @ExceptionHandler(value = TokenExpiredException.class)
     public ResponseBean handler(TokenExpiredException e){
         log.error(e.getMessage());
-        return new ResponseBean(ExceptionEnum.TOKEN_IS_EXPIRED,null);
+        return new ResponseBean(ExceptionEnum.NO_AUTHORIZED,null);
     }
 
     /**
@@ -71,7 +71,7 @@ public class GlobalExceptionHandle {
     @ExceptionHandler(value = MyException.class)
     public ResponseBean handler(MyException e) {
         log.error(e.getExceptionEnum().getMsg());
-        return new ResponseBean(e.getExceptionEnum(), null);
+        return new ResponseBean(e.getExceptionEnum(), e.getValue());
     }
 
 }

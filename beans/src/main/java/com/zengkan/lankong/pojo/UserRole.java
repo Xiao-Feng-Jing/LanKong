@@ -13,7 +13,6 @@ import lombok.Data;
 public class UserRole {
 
     private long id;
-    private String username;
-    private String password;
-    private String role;
+    private long userId;
+    private long roleId;
 }

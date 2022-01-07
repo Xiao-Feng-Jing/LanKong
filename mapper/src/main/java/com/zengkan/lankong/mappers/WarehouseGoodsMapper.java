@@ -15,7 +15,6 @@ import java.util.List;
  **/
 @Repository
 @Mapper
-@CacheNamespace(blocking = true)
 public interface WarehouseGoodsMapper {
 
 
@@ -31,7 +30,7 @@ public interface WarehouseGoodsMapper {
      * @param ids skuId集合
      * */
     @Delete("<script>delete from warehouse_goods where sku_id in " +
-            "<foreach collection='collection' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
             "#{ids}"+
             "</foreach>"+
             "</script>")
@@ -65,7 +64,7 @@ public interface WarehouseGoodsMapper {
      * @return 库存集合
      * */
     @Select("<script>select sku_id, current_cnt from warehouse_goods where sku_id in " +
-            "<foreach collection='collection' item='ids' index='index' open='(' separator=',' close=')'>"+
+            "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
             "#{ids}"+
             "</foreach>"+
             "</script>")
@@ -76,6 +75,6 @@ public interface WarehouseGoodsMapper {
      * @param skuId 商品id
      * @param num 减少的库存量
      * */
-    @Update("update warehouse_goods set current_cnt =current_cnt - #{num} where sku_id = #{skuId}")
+    @Update("update warehouse_goods set current_cnt = current_cnt - #{num} where sku_id = #{skuId}")
     void reduceStock(String skuId, long num);
 }

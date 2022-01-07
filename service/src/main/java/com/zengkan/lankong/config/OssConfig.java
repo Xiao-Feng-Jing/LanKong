@@ -18,7 +18,6 @@ import java.io.Serializable;
  * @Description: oss基础配置
  **/
 @Configuration
-@PropertySource(value = "classpath:application.yml")
 @Data
 public class OssConfig implements Serializable {
 

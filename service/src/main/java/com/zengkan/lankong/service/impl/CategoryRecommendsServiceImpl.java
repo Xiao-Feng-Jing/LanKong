@@ -7,13 +7,12 @@ import com.zengkan.lankong.mappers.CategoryRecommendsMapper;
 import com.zengkan.lankong.pojo.CategoryRecommends;
 import com.zengkan.lankong.service.CategoryRecommendsService;
 import com.zengkan.lankong.vo.CategoryRecommendsVO;
-import com.zengkan.lankong.vo.CategoryVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -41,11 +40,11 @@ public class CategoryRecommendsServiceImpl implements CategoryRecommendsService 
     @Override
     public List<CategoryRecommendsVO> queryCategories() {
         List<CategoryRecommendsVO> categoryRecommendsVOList = categoryRecommendsMapper.queryCategoriesc();
-        for (CategoryRecommendsVO categoryRecommendsVO : categoryRecommendsVOList) {
-            categoryRecommendsVO.setCategoryName(categoryMapper.findByIdToName(categoryRecommendsVO.getId()));
-        }
         if (categoryRecommendsVOList.isEmpty()) {
             throw new MyException(ExceptionEnum.CATEGORY_RECOMMEDN_NOT_FOUND);
+        }
+        for (CategoryRecommendsVO categoryRecommendsVO : categoryRecommendsVOList) {
+            categoryRecommendsVO.setCategoryName(categoryMapper.findByIdToName(categoryRecommendsVO.getId()));
         }
         return categoryRecommendsVOList;
     }
@@ -58,19 +57,20 @@ public class CategoryRecommendsServiceImpl implements CategoryRecommendsService 
 
     /**
      * 添加推荐分类
-     * @param cid 分类id
+     * @param categoryRecommends 分类id
      * @return 推荐分类对外值对象
      * */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public CategoryRecommends saveCategory(long cid) {
-        CategoryRecommends categoryRecommends = new CategoryRecommends();
-        categoryRecommends.setCreateTime(new Date());
+    public CategoryRecommendsVO saveCategory(CategoryRecommends categoryRecommends) {
+        categoryRecommends.setCreateTime(LocalDateTime.now());
         categoryRecommends.setUpdateTime(categoryRecommends.getCreateTime());
         categoryRecommendsMapper.saveCategory(categoryRecommends);
         CategoryRecommendsVO categoryRecommendsVO = new CategoryRecommendsVO();
+        // 属性拷贝
         BeanUtils.copyProperties(categoryRecommends, categoryRecommendsVO);
-        categoryRecommendsVO.setCategoryName(categoryMapper.findByIdToName(cid));
+        // 获取分类名
+        categoryRecommendsVO.setCategoryName(categoryMapper.findByIdToName(categoryRecommends.getCategoryId()));
         return categoryRecommendsVO;
     }
 
@@ -81,7 +81,7 @@ public class CategoryRecommendsServiceImpl implements CategoryRecommendsService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCategory(CategoryRecommendsVO categoryRecommendsVO) {
-        categoryRecommendsVO.setUpdateTime(new Date());
+        categoryRecommendsVO.setUpdateTime(LocalDateTime.now());
         categoryRecommendsMapper.updateCategory(categoryRecommendsVO);
     }
 }

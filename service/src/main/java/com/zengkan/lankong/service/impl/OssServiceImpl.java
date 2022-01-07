@@ -63,8 +63,8 @@ public class OssServiceImpl implements OssService {
 
         try {
             PolicyConditions policyConditions = new PolicyConditions();
-            policyConditions.addConditionItem(PolicyConditions.COND_CONTENT_LENGTH_RANGE,0,maxSize);
-            policyConditions.addConditionItem(MatchMode.StartWith,PolicyConditions.COND_KEY,dir);
+            policyConditions.addConditionItem(PolicyConditions.COND_CONTENT_LENGTH_RANGE, 0, maxSize);
+            policyConditions.addConditionItem(MatchMode.StartWith, PolicyConditions.COND_KEY, dir);
             String  postPolicy = ossClient.generatePostPolicy(expiration,policyConditions);
             byte[] binaryData;
             binaryData = postPolicy.getBytes(StandardCharsets.UTF_8);

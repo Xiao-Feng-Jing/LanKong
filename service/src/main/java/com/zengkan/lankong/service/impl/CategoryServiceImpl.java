@@ -47,7 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         if (category.isParent()) {
             List<GoodsCategory> nodes = new CopyOnWriteArrayList<>();
-            queryAllChildNodes(category,nodes);
+            queryAllChildNodes(category, nodes);
 
             for (GoodsCategory node : nodes) {
                 categoryMapper.deleteById(node.getCategoryId());
@@ -57,7 +57,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
         List<GoodsCategory> list = categoryMapper.category(category.getParentId());
         if (list.size() == 1){
-            categoryMapper.updateByIdAndIsParent(category.getParentId(),false);
+            categoryMapper.updateByIdAndIsParent(category.getParentId(), false);
         }
     }
 
@@ -69,7 +69,7 @@ public class CategoryServiceImpl implements CategoryService {
         将此category的父节点的isParent设为true
         */
         categoryMapper.insert(goodsCategory);
-        categoryMapper.updateByIdAndIsParent(goodsCategory.getParentId(),true);
+        categoryMapper.updateByIdAndIsParent(goodsCategory.getParentId(), true);
         return goodsCategory;
     }
 
@@ -100,7 +100,6 @@ public class CategoryServiceImpl implements CategoryService {
                             .findById(id)
                             .getCategoryName());
                 }
-
             }
         }
         return names;

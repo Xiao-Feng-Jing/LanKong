@@ -270,7 +270,7 @@ public class RedisUtil {
      * @return 值
      */
     public Object hGet(String key, Object key1){
-        return redisTemplate.opsForHash().get(key,key1);
+        return redisTemplate.opsForHash().get(key, key1);
     }
 
 
@@ -395,7 +395,7 @@ public class RedisUtil {
      * @param index 索引
      * @param value 值
      */
-    public void lUpdatePush(String key,int index,String value){
+    public void lUpdatePush(String key, int index, String value){
         redisTemplate.opsForList().set(key, index, value);
     }
 
@@ -733,7 +733,7 @@ public class RedisUtil {
      * @param value 值
      * @return 分数
      */
-    public Double zScore(String key,Object value){
+    public Double zScore(String key, Object value){
         return redisTemplate.opsForZSet().score(key, value);
     }
 
@@ -744,20 +744,18 @@ public class RedisUtil {
      * @param key 键 不能为null
      * @param value 值
      * @param delta 带符号的双精度浮点数
-     * @return 修改后的值
      */
-    public Double zIncrBy(String key,Object value,double delta){
-        return redisTemplate.opsForZSet().incrementScore(key, value,delta);
+    public void zIncrBy(String key, Object value, double delta){
+        redisTemplate.opsForZSet().incrementScore(key, value, delta);
     }
 
     /**
      * 根据key和value删除元素
      * @param key 键
      * @param value 值
-     * @return 已删除元素的数量。
      */
-    public Long zRemove(String key,Object... value){
-        return redisTemplate.opsForZSet().remove(key,value);
+    public void zRemove(String key, Object... value){
+        redisTemplate.opsForZSet().remove(key, value);
     }
 
     /**

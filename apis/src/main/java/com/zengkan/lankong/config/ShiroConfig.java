@@ -1,9 +1,7 @@
 package com.zengkan.lankong.config;
 
-import com.zengkan.lankong.service.UserService;
 import com.zengkan.lankong.shiro.filter.JwtFilter;
 import com.zengkan.lankong.shiro.realm.MyRealm;
-import com.zengkan.lankong.utils.RedisUtil;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
@@ -49,7 +47,7 @@ public class ShiroConfig {
      * 先走 filter ，然后 filter 如果检测到请求头存在 token，则用 token 去 login，走 Realm 去验证
      */
     @Bean
-    public ShiroFilterFactoryBean factory(@Qualifier("securityManager")DefaultWebSecurityManager securityManager, UserService userService, RedisUtil redisUtil){
+    public ShiroFilterFactoryBean factory(@Qualifier("securityManager")DefaultWebSecurityManager securityManager){
         ShiroFilterFactoryBean factoryBean=new ShiroFilterFactoryBean();
         factoryBean.setSecurityManager(securityManager);
         // 添加自己的过滤器并且取名为jwt
@@ -59,7 +57,7 @@ public class ShiroConfig {
         factoryBean.setFilters(filterMap);
 
         // 设置无权限时跳转的 url;
-        factoryBean.setUnauthorizedUrl("/noAuth/**");
+        factoryBean.setUnauthorizedUrl("/noAuth");
         Map<String,String> filterRuleMap=new HashMap<>();
         filterRuleMap.put("/swagger-ui.html","anon");
         filterRuleMap.put("/webjars/**","anon");
@@ -67,9 +65,10 @@ public class ShiroConfig {
         filterRuleMap.put("/v2/**", "anon");
         filterRuleMap.put("/static/**","anon");
         // 访问 /noAuth/** 不通过JWTFilter
-        filterRuleMap.put("/noAuth/**","anon");
+        filterRuleMap.put("/noAuth","anon");
         // 所有请求通过我们自己的JWT Filter
-        filterRuleMap.put("/**","anon");
+
+        filterRuleMap.put("/**","jwt");
         factoryBean.setFilterChainDefinitionMap(filterRuleMap);
         return factoryBean;
     }

@@ -49,8 +49,6 @@ public class OssController {
     @ApiOperation("oss上传成功回调")
     @PostMapping("/callback")
     public ResponseBean callback(HttpServletRequest request){
-        /*System.out.println(request);
-        System.out.println(ossCallbackResult);*/
         return new ResponseBean(CodeEnum.SUCCESS, ossService.callback(request));
     }
 

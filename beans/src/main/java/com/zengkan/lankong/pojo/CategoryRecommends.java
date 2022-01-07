@@ -3,7 +3,7 @@ package com.zengkan.lankong.pojo;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @author zengkan
@@ -13,7 +13,7 @@ public class CategoryRecommends {
 
   private long id;
   private long categoryId;
-  private Date createTime;
-  private Date updateTime;
+  private LocalDateTime createTime;
+  private LocalDateTime updateTime;
 
 }

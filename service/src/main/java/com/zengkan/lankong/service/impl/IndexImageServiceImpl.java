@@ -1,21 +1,21 @@
 package com.zengkan.lankong.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.zengkan.lankong.enums.ExceptionEnum;
 import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.mappers.IndexImgMapper;
 import com.zengkan.lankong.pojo.IndexImg;
-import com.zengkan.lankong.service.IndexImgService;
+import com.zengkan.lankong.service.IndexImageService;
 import com.zengkan.lankong.utils.RedisUtil;
 import com.zengkan.lankong.utils.UUIDUtil;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -28,7 +28,7 @@ import java.util.List;
  **/
 @Service
 @Slf4j
-public class IndexImgServiceImpl implements IndexImgService {
+public class IndexImageServiceImpl implements IndexImageService {
 
     private static final String INDEX_IMG = "IndexImg";
 
@@ -37,13 +37,13 @@ public class IndexImgServiceImpl implements IndexImgService {
     private final RedisUtil redisUtil;
 
     @Autowired
-    public IndexImgServiceImpl(IndexImgMapper indexImgMapper, RedisUtil redisUtil) {
+    public IndexImageServiceImpl(IndexImgMapper indexImgMapper, RedisUtil redisUtil) {
         this.indexImgMapper = indexImgMapper;
         this.redisUtil = redisUtil;
     }
 
     @Override
-    public List<IndexImg> queryUrlList() {
+    public List<IndexImg> listIndexImages() {
         List<IndexImg> list = null;
         //首页轮播图是热点数据
         Object jsonData = redisUtil.getString(INDEX_IMG);
@@ -55,7 +55,7 @@ public class IndexImgServiceImpl implements IndexImgService {
                 String uuid = UUIDUtil.uuid();
                 try {
                     if (Boolean.FALSE.equals(redisUtil.lock("lock",uuid))) {
-                        return list;
+                        return Collections.emptyList();
                     }
                     jsonData = redisUtil.getString(INDEX_IMG);
                     if (jsonData == null) {
@@ -81,8 +81,9 @@ public class IndexImgServiceImpl implements IndexImgService {
     public IndexImg save(IndexImg indexImg) {
         String id = UUIDUtil.uuid();
         indexImg.setId(id);
-        indexImg.setCreateTime(new Date());
+        indexImg.setCreateTime(LocalDateTime.now());
         indexImg.setUpdateTime(indexImg.getCreateTime());
+        redisUtil.del(INDEX_IMG);
         int n = indexImgMapper.saveIndexImg(indexImg);
         if (n > 0) {
             return indexImg;
@@ -93,7 +94,8 @@ public class IndexImgServiceImpl implements IndexImgService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public IndexImg update(IndexImg indexImg) {
-        indexImg.setUpdateTime(new Date());
+        indexImg.setUpdateTime(LocalDateTime.now());
+        redisUtil.del(INDEX_IMG);
         int n = indexImgMapper.updateIndexImg(indexImg);
         if (n > 0) {
             return indexImg;
@@ -104,6 +106,7 @@ public class IndexImgServiceImpl implements IndexImgService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteById(String id) {
+        redisUtil.del(INDEX_IMG);
         int n = indexImgMapper.deleteById(id);
         if (n <= 0) {
             throw new MyException(ExceptionEnum.CAROUSEL_NOT_FOUND);

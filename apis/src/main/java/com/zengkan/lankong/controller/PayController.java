@@ -1,8 +1,9 @@
-package com.zengkan.lankong.controller.index;
+package com.zengkan.lankong.controller;
 
 import com.alipay.easysdk.factory.Factory;
 import com.alipay.easysdk.payment.page.models.AlipayTradePagePayResponse;
 import com.zengkan.lankong.service.OrderService;
+import com.zengkan.lankong.service.PayLogService;
 import com.zengkan.lankong.utils.UUIDUtil;
 import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.ResponseBean;
@@ -27,18 +28,18 @@ import java.util.Map;
  * @modified By :
  **/
 @RestController
-@RequestMapping("portal/pay")
+@RequestMapping("/pay")
 @Api(tags = "支付接口")
 public class PayController {
 
     private static final String SUCCESS_MESSAGE = "SUCCESS";
     private static final String FAIL_MESSAGE = "FAIL";
 
-    private final OrderService orderService;
+    private final PayLogService payLogService;
 
     @Autowired
-    public PayController(OrderService orderService) {
-        this.orderService = orderService;
+    public PayController(PayLogService payLogService) {
+        this.payLogService = payLogService;
     }
 
 
@@ -49,7 +50,7 @@ public class PayController {
      */
     @GetMapping("url/{id}")
     public ResponseBean generateUrl(@PathVariable("id") String orderId) {
-        return new ResponseBean(CodeEnum.SUCCESS, orderService.generateUrl(orderId));
+        return new ResponseBean(CodeEnum.SUCCESS, null);
     }
 
     @Value("${alipay.returnUrl}")

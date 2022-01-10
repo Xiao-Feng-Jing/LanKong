@@ -1,12 +1,10 @@
 package com.zengkan.lankong.vo;
 
-import com.zengkan.lankong.pojo.CustomerAddr;
 import com.zengkan.lankong.pojo.CustomerInf;
 import com.zengkan.lankong.pojo.User;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.

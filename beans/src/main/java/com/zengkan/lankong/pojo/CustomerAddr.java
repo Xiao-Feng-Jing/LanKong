@@ -49,7 +49,7 @@ public class CustomerAddr implements Serializable {
   /**
    * 是否是默认地址
    * */
-  private long isDefault;
+  private boolean isDefault;
   /**
    * 最后修改时间
    * */

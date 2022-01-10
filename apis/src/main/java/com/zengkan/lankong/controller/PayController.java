@@ -2,18 +2,25 @@ package com.zengkan.lankong.controller;
 
 import com.alipay.easysdk.factory.Factory;
 import com.alipay.easysdk.payment.page.models.AlipayTradePagePayResponse;
+import com.zengkan.lankong.pojo.OrderMaster;
 import com.zengkan.lankong.service.OrderService;
 import com.zengkan.lankong.service.PayLogService;
 import com.zengkan.lankong.utils.UUIDUtil;
 import com.zengkan.lankong.enums.CodeEnum;
+import com.zengkan.lankong.vo.PayVO;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,9 +39,6 @@ import java.util.Map;
 @Api(tags = "支付接口")
 public class PayController {
 
-    private static final String SUCCESS_MESSAGE = "SUCCESS";
-    private static final String FAIL_MESSAGE = "FAIL";
-
     private final PayLogService payLogService;
 
     @Autowired
@@ -42,37 +46,19 @@ public class PayController {
         this.payLogService = payLogService;
     }
 
-
-    /**
-     * 生成支付宝
-     * @param orderId
-     * @return
-     */
-    @GetMapping("url/{id}")
-    public ResponseBean generateUrl(@PathVariable("id") String orderId) {
-        return new ResponseBean(CodeEnum.SUCCESS, null);
-    }
-
-    @Value("${alipay.returnUrl}")
-    private String returnUrl;
-
-    /**
-     * 支付宝测试
-     * */
     /**
      * 下单支付
-     * 当用户点击支付的时候，应该是要传参的，我这里就直接省略了，免得修改麻烦，大家应该可以自己实现
      */
-    @SneakyThrows
-    @PostMapping(value = "pay")
-    public String pay() {
-        AlipayTradePagePayResponse response = Factory.Payment
-                //选择网页支付平台
-                .Page()
-                //调用支付方法:订单名称、订单号、金额、回调页面
-                .pay("测试商品", UUIDUtil.uuid(), "5","");
-        //这里可以加入业务代码：比如生成订单等等。。
-        return response.body;
+    @PostMapping
+    @RequiresRoles(value = {
+            "user"
+    })
+    @ApiOperation(value = "下单支付", notes = "角色：用户")
+    @ApiImplicitParam(name = "payVO", value = "下单数据模型")
+
+    public ResponseBean pay(@RequestBody PayVO payVO
+                      ) {
+        return new ResponseBean(CodeEnum.SUCCESS, payLogService.pay(payVO));
     }
 
     /**
@@ -82,30 +68,8 @@ public class PayController {
      * @return
      */
     @PostMapping(value = "notify")
+    @ApiOperation(value = "支付回调接口")
     public String notifyAsync(HttpServletRequest request) {
-        String result = "fail";
-        Map<String, String> map = new HashMap<>();
-        Enumeration<String> parameterNames = request.getParameterNames();
-        while (parameterNames.hasMoreElements()) {
-            String key = parameterNames.nextElement();
-            String value = request.getParameter(key);
-            map.put(key, value);
-        }
-        //验签
-        try {
-            if (Factory.Payment.Common().verifyNotify(map)) {
-                //验证用户的支付结果
-                String trade_status = request.getParameter("trade_status");
-                if ("TRADE_SUCCESS".equals(trade_status)) {
-                    //这里可以更新订单的状态等等。
-                    result += "success";
-                }
-            } else {
-                return result;
-            }
-        } catch (Exception e) {
-            return result;
-        }
-        return result;
+        return payLogService.notifyAsync(request);
     }
 }

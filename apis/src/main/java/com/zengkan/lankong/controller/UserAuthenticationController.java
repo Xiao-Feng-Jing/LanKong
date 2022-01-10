@@ -7,6 +7,7 @@ import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.vo.RegisteredVO;
 import com.zengkan.lankong.vo.ResponseBean;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
@@ -62,6 +63,7 @@ public class UserAuthenticationController {
      * */
     @PostMapping("/login")
     @ApiOperation(value = "用户登录接口", notes = "权限需要：无")
+    @ApiImplicitParam(name = "user", value = "用户数据模型")
     public ResponseBean login(@RequestBody User user){
         return new ResponseBean(CodeEnum.SUCCESS, userAuthenticationService.login(user));
     }
@@ -71,6 +73,7 @@ public class UserAuthenticationController {
      * */
     @PostMapping("/registered")
     @ApiOperation(value = "用户注册接口", notes = "权限需要：无")
+    @ApiImplicitParam(name = "registeredVO", value = "注册数据展示模型")
     public ResponseBean registered(@RequestBody RegisteredVO registeredVO) {
         return new ResponseBean(CodeEnum.SUCCESS, userAuthenticationService.registered(registeredVO));
     }

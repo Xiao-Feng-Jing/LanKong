@@ -70,6 +70,7 @@ public class GoodsController {
     @PostMapping("/spu")
     @RequiresRoles("admin")
     @ApiOperation(value = "添加商品信息", notes = "前端提供数据模型, 权限需要：管理员")
+    @ApiImplicitParam(name = "spuVo", value = "商品数据模型")
     public ResponseBean saveGoods(@RequestBody SpuVO spuVo){
         this.goodsService.saveGoods(spuVo);
         return new ResponseBean(CodeEnum.SAVE_SUCCESS, null);
@@ -82,7 +83,8 @@ public class GoodsController {
     @PutMapping("/spu")
     @RequiresRoles("admin")
     @ApiOperation(value = "修改商品信息", notes = "前端提供数据模型, 权限需要：管理员")
-     public ResponseBean updateGoods(@RequestBody SpuVO spuVo){
+    @ApiImplicitParam(name = "spuVo", value = "商品数据模型")
+    public ResponseBean updateGoods(@RequestBody SpuVO spuVo){
         this.goodsService.updateGoods(spuVo);
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
     }
@@ -169,6 +171,5 @@ public class GoodsController {
     public ResponseBean goodsSkus(@RequestParam("ids") List<String> ids) {
         return new ResponseBean(CodeEnum.SUCCESS, this.goodsService.querySkuBySkuIds(ids));
     }
-
 
 }

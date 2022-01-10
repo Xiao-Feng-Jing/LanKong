@@ -142,7 +142,8 @@ public class UserAuthenticationServiceImpl implements UserAuthenticationService 
         return user;
     }
 
-    private String generateToken(User user) {
+    @Override
+    public String generateToken(User user) {
         try {
             Map<String, Object> map = new HashMap<>();
             map.put("id", user.getId());

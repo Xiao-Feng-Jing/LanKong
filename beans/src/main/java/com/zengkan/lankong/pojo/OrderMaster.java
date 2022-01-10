@@ -35,26 +35,14 @@ public class OrderMaster implements Serializable {
    * */
   private String promotionIds;
   /**
-   * 支付类型，1、在线支付，2、货到付款
+   * 支付方式：1、支付宝支付
    */
   @NotNull
   private long paymentType;
   /**
-   * 邮费，单位元
-   * */
-  private double postFee;
-  /**
    * 订单创建时间
    * */
   private LocalDateTime createTime;
-  /**
-   * 物流名称
-   * */
-  private String shippingName;
-  /**
-   * 物流单号
-   * */
-  private String shippingCode;
   /**
    * 用户id
    * */

@@ -48,6 +48,7 @@ public class IndexImageController {
     @PostMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "添加轮播图", notes = "根据轮播图数据模型更新，权限需求：管理员")
+    @ApiImplicitParam(name = "indexImg", value = "轮播图数据模型")
     public ResponseBean saveImageAddr(@RequestBody IndexImg indexImg){
         return new ResponseBean(CodeEnum.SAVE_SUCCESS, indexImageService.save(indexImg));
     }
@@ -55,6 +56,7 @@ public class IndexImageController {
     @PutMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "更新轮播图", notes = "根据轮播图数据模型更新，权限需求：管理员")
+    @ApiImplicitParam(name = "indexImg", value = "轮播图数据模型")
     public ResponseBean updateImageAddr(@RequestBody IndexImg indexImg){
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, indexImageService.update(indexImg));
     }

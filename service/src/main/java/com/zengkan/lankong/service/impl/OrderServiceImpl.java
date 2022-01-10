@@ -3,6 +3,7 @@ package com.zengkan.lankong.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.zengkan.lankong.enums.ExceptionEnum;
+import com.zengkan.lankong.enums.OrderEnum;
 import com.zengkan.lankong.exception.MyException;
 import com.zengkan.lankong.mappers.OrderDetailMapper;
 import com.zengkan.lankong.mappers.OrderMasterMapper;
@@ -13,6 +14,7 @@ import com.zengkan.lankong.service.OrderService;
 import com.zengkan.lankong.utils.RedisUtil;
 import com.zengkan.lankong.utils.UUIDUtil;
 import com.zengkan.lankong.vo.PageResult;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,7 @@ import java.util.List;
  * @Description:
  **/
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private final OrderMasterMapper orderMasterMapper;
@@ -65,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus orderStatus = new OrderStatus();
         orderStatus.setOrderId(orderId);
         orderStatus.setCreateTime(orderMaster.getCreateTime());
-        orderStatus.setStatus(1);
+        orderStatus.setStatus(OrderEnum.UNPAID_NOT_SHIPPED.getCode());
         orderStatusMapper.save(orderStatus);
 
         orderMaster.getOrderDetails().forEach(orderDetail -> {
@@ -155,6 +158,7 @@ public class OrderServiceImpl implements OrderService {
     public boolean updateOrderStatus(String orderId, Integer status) {
         OrderStatus orderStatus = orderStatusMapper.queryByOrderId(orderId);
         if (orderStatus == null) {
+            log.error("订单: {}不存在", orderId);
             throw new MyException(ExceptionEnum.ORDER_NOT_FOUND);
         }
         // 根据状态更新相应时间
@@ -182,6 +186,7 @@ public class OrderServiceImpl implements OrderService {
                 orderMasterMapper.updateBuyerRate(1, orderId);
                 break;
             default :
+                log.error("订单状态不存在");
                 throw new MyException(ExceptionEnum.INVALID_PARAM);
         }
         return count == 1;
@@ -203,6 +208,5 @@ public class OrderServiceImpl implements OrderService {
         });
         return new PageResult<>(pageInfo.getTotal(), pageInfo.getPages(),
                 pageInfo.getPageNum(), pageInfo.getPageSize(), list);
-
     }
 }

@@ -4,6 +4,7 @@ import com.zengkan.lankong.enums.CodeEnum;
 import com.zengkan.lankong.pojo.CustomerInf;
 import com.zengkan.lankong.pojo.User;
 import com.zengkan.lankong.service.UserService;
+import com.zengkan.lankong.vo.PasswordVO;
 import com.zengkan.lankong.vo.ResponseBean;
 import com.zengkan.lankong.vo.UserInfoVO;
 import com.zengkan.lankong.vo.UserRoleVO;
@@ -40,6 +41,20 @@ public class UserController {
         this.userService = userService;
     }
 
+
+    /**
+     * 修改密码
+     * */
+    @PostMapping("/updatePassword")
+    @RequiresRoles(logical = Logical.OR, value = {
+            "user", "admin"
+    })
+    @ApiOperation(value = "修改密码", notes = "角色：用户或管理员")
+    @ApiImplicitParam(name = "passwordVO", value = "修改密码数据模型")
+    public ResponseBean updatePassword(@RequestBody PasswordVO passwordVO, HttpServletRequest request) {
+        return new ResponseBean(CodeEnum.SUCCESS, userService.updatePassword(passwordVO, request));
+    }
+
     /**
      * 更新用户基础资料
      * */
@@ -48,6 +63,7 @@ public class UserController {
         "user", "admin"
     })
     @ApiOperation(value = "更新用户信息", notes = "角色：用户或管理员")
+    @ApiImplicitParam(name = "userInfoVO", value = "用户资料数据模型")
     public ResponseBean update(@RequestBody UserInfoVO userInfoVO, HttpServletRequest request) {
         return new ResponseBean(CodeEnum.SUCCESS, userService.update(userInfoVO, request));
     }
@@ -99,6 +115,7 @@ public class UserController {
     @PostMapping("/reviseRole")
     @RequiresRoles(value = "admin")
     @ApiOperation(value = "修改用户角色", notes = "角色：管理员")
+    @ApiImplicitParam(name = "userRoleVO", value = "用户角色数据集合")
     public ResponseBean reviseRole(@RequestBody UserRoleVO userRoleVO) {
         return new ResponseBean(CodeEnum.SUCCESS, userService.reviseRole(userRoleVO));
     }

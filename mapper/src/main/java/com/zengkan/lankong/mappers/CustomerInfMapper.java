@@ -28,7 +28,7 @@ public interface CustomerInfMapper {
             "identity_card_type = #{identityCardType}, identity_card_no = #{identityCardNo}, " +
             "mobile_phone = #{mobilePhone}, customer_email = #{customerEmail}, " +
             "gender = #{gender} where customer_inf_id = ${customerInfId}")
-    boolean updateInfo(CustomerInf customerInf);
+    int updateInfo(CustomerInf customerInf);
 
     @Select("select customer_inf_id, customer_id, customer_name, identity_card_type, identity_card_no, " +
             "mobile_phone, customer_email, gender, register_time, modified_time from customer_inf where customer_id = #{id}")

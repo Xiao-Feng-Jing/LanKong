@@ -38,4 +38,6 @@ public interface UserAuthenticationService {
     void saveToken(String newToken, User user);
 
     User registered(RegisteredVO registeredVO);
+
+    String generateToken(User user);
 }

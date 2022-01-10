@@ -39,6 +39,7 @@ public class CategoryRecommendsController {
     @PostMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "添加推荐分类", notes = "通过分类ID添加，权限需要：管理员")
+    @ApiImplicitParam(name = "categoryRecommends", value = "推荐分类对象")
     public ResponseBean addRecommendsCategory(@RequestBody CategoryRecommends categoryRecommends){
         return new ResponseBean(CodeEnum.SAVE_SUCCESS, categoryRecommendsService.saveCategory(categoryRecommends));
     }
@@ -46,6 +47,7 @@ public class CategoryRecommendsController {
     @PutMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "修改推荐分类", notes = "通过推荐分类数据模型修改，权限需要：管理员")
+    @ApiImplicitParam(name = "categoryRecommendsVO", value = "推荐分类对象对外接口")
     public ResponseBean updateRecommendsCategory(@RequestBody CategoryRecommendsVO categoryRecommendsVO) {
         categoryRecommendsService.updateCategory(categoryRecommendsVO);
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
@@ -66,6 +68,4 @@ public class CategoryRecommendsController {
     public ResponseBean listRecommendsCategory(){
         return new ResponseBean(CodeEnum.SUCCESS, categoryRecommendsService.queryCategories());
     }
-
-
 }

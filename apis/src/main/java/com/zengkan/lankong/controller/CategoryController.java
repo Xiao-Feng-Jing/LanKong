@@ -40,7 +40,7 @@ public class CategoryController {
     @GetMapping("/list")
     @ApiOperation(value = "商品分类查询", notes = "根据层级显示，权限需要：无")
     @ApiImplicitParam(name = "pid", value = "父分类id", required = true, paramType = "query", dataType = "Long", defaultValue = "0")
-    public ResponseBean listCategory(@RequestParam(value = "pid", defaultValue = "0")Long pid){
+    public ResponseBean listCategory(@RequestParam(value = "pid", defaultValue = "0") Long pid){
         return new ResponseBean(CodeEnum.SUCCESS, categoryService.category(pid));
     }
 
@@ -65,6 +65,7 @@ public class CategoryController {
     @PostMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "添加商品分类", notes = "前端传入分类的数据模型，权限需要：管理员")
+    @ApiImplicitParam(name = "goodsCategory", value = "商品分类对象")
     public ResponseBean saveCategory(@RequestBody GoodsCategory goodsCategory){
         GoodsCategory category = categoryService.saveCategory(goodsCategory);
         return new ResponseBean(CodeEnum.SAVE_SUCCESS, category);
@@ -77,6 +78,7 @@ public class CategoryController {
     @PutMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "修改商品分类", notes = "前端传入分类的数据模型，权限需要：管理员")
+    @ApiImplicitParam(name = "goodsCategory", value = "商品分类对象")
     public ResponseBean updateCategory(@RequestBody GoodsCategory goodsCategory){
         categoryService.updateCategory(goodsCategory);
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);

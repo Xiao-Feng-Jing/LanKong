@@ -37,7 +37,7 @@ public class SpecController {
     @GetMapping("{id}")
     @RequiresRoles("admin")
     @ApiOperation(value = "查询规格参数模板", notes = "根据分类ID, 权限需要：管理员")
-    @ApiImplicitParam(name = "", value = "分类ID", required = true, paramType = "query", dataType = "String")
+    @ApiImplicitParam(name = "id", value = "分类ID", required = true, paramType = "query", dataType = "String")
     public ResponseBean query(@PathVariable("id") long id) {
         return new ResponseBean(CodeEnum.SUCCESS, specService.queryById(id));
     }
@@ -50,6 +50,7 @@ public class SpecController {
     @PostMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "创建规格参数模板", notes = "根据规格参数模板数据模型保存, 权限需要：管理员")
+    @ApiImplicitParam(name = "tbSpecification", value = "规格参数模板数据模型")
     public ResponseBean saveSpec(@RequestBody TbSpecification tbSpecification){
         specService.save(tbSpecification);
         return new ResponseBean(CodeEnum.SAVE_SUCCESS, null);
@@ -63,6 +64,7 @@ public class SpecController {
     @PutMapping
     @RequiresRoles("admin")
     @ApiOperation(value = "更新规格参数模板", notes = "根据规格参数模板数据模型更新, 权限需要：管理员")
+    @ApiImplicitParam(name = "tbSpecification", value = "规格参数模板数据模型")
     public ResponseBean updateSpec(@RequestBody TbSpecification tbSpecification){
         specService.update(tbSpecification);
         return new ResponseBean(CodeEnum.UPDATE_SUCCESS, null);
@@ -76,6 +78,7 @@ public class SpecController {
     @DeleteMapping("/{cid}")
     @RequiresRoles("admin")
     @ApiOperation(value = "删除规格参数模板", notes = "根据分类ID删除, 权限需要：管理员")
+    @ApiImplicitParam(name = "id", value = "分类ID", required = true, paramType = "query", dataType = "String")
     public ResponseBean deleteSpecByCategoryId(@PathVariable("cid") long cid){
         specService.deleteByCategoryId(cid);
         return new ResponseBean(CodeEnum.DELETE_SUCCESS, null);

@@ -10,9 +10,11 @@ import com.zengkan.lankong.mappers.UserRoleMapper;
 import com.zengkan.lankong.pojo.CustomerInf;
 import com.zengkan.lankong.pojo.User;
 import com.zengkan.lankong.pojo.UserRole;
+import com.zengkan.lankong.service.UserAuthenticationService;
 import com.zengkan.lankong.service.UserService;
 import com.zengkan.lankong.utils.RedisUtil;
 import com.zengkan.lankong.utils.ShaUtil;
+import com.zengkan.lankong.vo.PasswordVO;
 import com.zengkan.lankong.vo.UserInfoVO;
 import com.zengkan.lankong.vo.UserRoleVO;
 import com.zengkan.lankong.vo.UserVO;
@@ -40,15 +42,20 @@ public class UserServiceImpl implements UserService {
     private final UserRoleMapper userRoleMapper;
     private final CustomerInfMapper customerInfMapper;
     private final RedisUtil redisUtil;
+    private final UserAuthenticationService userAuthenticationService;
 
     @Autowired
-    public UserServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper, CustomerInfMapper customerInfMapper, RedisUtil redisUtil) {
+    public UserServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper, CustomerInfMapper customerInfMapper, RedisUtil redisUtil, UserAuthenticationService userAuthenticationService) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.customerInfMapper = customerInfMapper;
         this.redisUtil = redisUtil;
+        this.userAuthenticationService = userAuthenticationService;
     }
 
+    /**
+     * 更新用户基础资料
+     * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserInfoVO update(UserInfoVO userInfoVO, HttpServletRequest request) {
@@ -59,22 +66,27 @@ public class UserServiceImpl implements UserService {
             throw new MyException(ExceptionEnum.INVALID_TOKEN);
         }
         user.setModifiedTime(LocalDateTime.now());
-        user.setPassword(ShaUtil.getSha(user.getPassword()));
-        if (userMapper.update(user) && customerInfMapper.updateInfo(customerInf)) {
+        if (userMapper.update(user) == 1 && customerInfMapper.updateInfo(customerInf) == 1) {
             redisUtil.setString(token, userInfoVO);
             return userInfoVO;
         }
         throw new MyException(ExceptionEnum.ERROR);
     }
 
+    /**
+     * 静默或启用账号
+     * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void status(List<Long> ids) {
-        if (!userMapper.updateById(ids)) {
+        if (userMapper.updateById(ids) != 1) {
             throw new MyException(ExceptionEnum.ERROR);
         }
     }
 
+    /**
+     * 分页查询用户
+     * */
     @Override
     public List<UserVO> userList(Integer pageNum, Integer rows, Boolean status, Boolean online) {
         Set<Object> ids = redisUtil.hGet("user");
@@ -117,6 +129,9 @@ public class UserServiceImpl implements UserService {
         return userVOList;
     }
 
+    /**
+     * 修改用户角色
+     * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<UserRole> reviseRole(UserRoleVO userRoleVO) {
@@ -126,6 +141,10 @@ public class UserServiceImpl implements UserService {
         return userRoles;
     }
 
+
+    /**
+     * 获取用户资料
+     * */
     @Override
     public UserInfoVO selectUser(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
@@ -136,5 +155,25 @@ public class UserServiceImpl implements UserService {
         userInfoVO.setUser(user);
         userInfoVO.setCustomerInf(customerInf);
         return userInfoVO;
+    }
+
+    /**
+     * 修改密码并返回新的token
+     * */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String updatePassword(PasswordVO passwordVO, HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        User user = (User) redisUtil.getString(token);
+        passwordVO.setOldPassword(ShaUtil.getSha(passwordVO.getOldPassword()));
+        if (!user.getPassword().equals(passwordVO.getOldPassword())) {
+            throw new MyException(ExceptionEnum.INVALID_PASSWORD);
+        }
+        passwordVO.setNewPassword(ShaUtil.getSha(passwordVO.getNewPassword()));
+        if (userMapper.updatePassword(passwordVO) == 1) {
+            throw new MyException(ExceptionEnum.ERROR);
+        }
+        user.setPassword(passwordVO.getNewPassword());
+        return userAuthenticationService.generateToken(user);
     }
 }

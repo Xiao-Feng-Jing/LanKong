@@ -3,6 +3,7 @@ package com.zengkan.lankong.service;
 import com.zengkan.lankong.pojo.CustomerInf;
 import com.zengkan.lankong.pojo.User;
 import com.zengkan.lankong.pojo.UserRole;
+import com.zengkan.lankong.vo.PasswordVO;
 import com.zengkan.lankong.vo.UserInfoVO;
 import com.zengkan.lankong.vo.UserRoleVO;
 import com.zengkan.lankong.vo.UserVO;
@@ -29,4 +30,6 @@ public interface UserService {
     List<UserRole> reviseRole(UserRoleVO userRoleVO);
 
     UserInfoVO selectUser(HttpServletRequest request);
+
+    String updatePassword(PasswordVO passwordVO, HttpServletRequest request);
 }

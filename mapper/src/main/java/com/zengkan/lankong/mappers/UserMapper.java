@@ -1,6 +1,7 @@
 package com.zengkan.lankong.mappers;
 
 import com.zengkan.lankong.pojo.User;
+import com.zengkan.lankong.vo.PasswordVO;
 import com.zengkan.lankong.vo.UserVO;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
@@ -50,23 +51,21 @@ public interface UserMapper {
     @Update("<script>" +
             "update `user` set " +
             "<if test = 'username != null and username != \"\" '> username = #{username} </if>" +
-            "<if test = 'password != null and password != \"\" '> password = #{password} </if>" +
             "<if test = 'url != null and url != \"\"'> header_url = #{url} </if>" +
             "modified_time = #{modifiedTime} where id = #{id};" +
             "</script>")
-    boolean update(User user);
+    int update(User user);
 
     /**
      * 静默或启用用户
-     *
-     * @return*/
+     * */
     @Update("<script>" +
             "update `user` set user_stats = !user_stats where id in" +
             "<foreach collection='ids' item='ids' index='index' open='(' separator=',' close=')'>"+
             "#{ids}"+
             "</foreach> " +
             "</script>")
-    boolean updateById(List<Long> ids);
+    int updateById(List<Long> ids);
 
      /**
       * 查询用户
@@ -119,4 +118,10 @@ public interface UserMapper {
      * */
     @Select("select id, username, password, url, modified_time from `user` where id = #{id}")
     User selectbyId(long id);
+
+    /**
+     * 修改密码
+     * */
+    @Update("update `user` set password = #{newPassword} where id = #{id}")
+    int updatePassword(PasswordVO passwordVO);
 }

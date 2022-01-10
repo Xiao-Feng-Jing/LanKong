@@ -1,5 +1,11 @@
 package com.zengkan.lankong.service;
 
+import com.zengkan.lankong.pojo.OrderMaster;
+import com.zengkan.lankong.vo.PayVO;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -8,4 +14,7 @@ package com.zengkan.lankong.service;
  * @Description:
  **/
 public interface PayLogService {
+    String pay(PayVO payVO);
+
+    String notifyAsync(HttpServletRequest request);
 }
